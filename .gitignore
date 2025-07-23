@@ -1,0 +1,49 @@
+# ===============================================
+# ERP PROJECT - GITIGNORE SIMPLE
+# ===============================================
+
+# Dossiers spécifiques
+Sources/
+obj/
+bin/
+
+# Build outputs
+Debug/
+Release/
+dist/
+build/
+out/
+
+# Dependencies
+node_modules/
+
+# IDE & OS
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs & temp files
+logs/
+*.log
+*.tmp
+*.cache
+
+# Environment & config
+.env*
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+
+# Database
+*.db
+*.db-*
+
+# Next.js (frontend)
+/.next/
+.turbo
+
+# Package managers
+.pnp
+.pnp.js
