@@ -1,6 +1,9 @@
+// src/app/page.tsx - Version avec imports directs
+
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// ✅ Imports directs qui fonctionnent à coup sûr
+import { Card, CardContent, CardHeader, CardTitle } from './shared/components/ui/Card';
+import { Button } from './shared/components/ui';
 import { Package, TrendingUp, Users, BarChart3 } from 'lucide-react';
 
 export default function HomePage() {
@@ -80,27 +83,27 @@ export default function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
               <h3 className="font-semibold text-lg mb-2">Frontend</h3>
-              <p className="text-gray-600">Next.js 14</p>
+              <p className="text-gray-600">Next.js 15</p>
               <p className="text-gray-600">TypeScript</p>
               <p className="text-gray-600">Tailwind CSS</p>
             </div>
             <div>
               <h3 className="font-semibold text-lg mb-2">UI/UX</h3>
-              <p className="text-gray-600">Radix UI</p>
+              <p className="text-gray-600">Components UI</p>
               <p className="text-gray-600">Lucide Icons</p>
               <p className="text-gray-600">Responsive Design</p>
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-2">State Management</h3>
-              <p className="text-gray-600">TanStack Query</p>
-              <p className="text-gray-600">React Hook Form</p>
-              <p className="text-gray-600">Zod Validation</p>
+              <h3 className="font-semibold text-lg mb-2">Architecture</h3>
+              <p className="text-gray-600">Modulaire</p>
+              <p className="text-gray-600">React Hooks</p>
+              <p className="text-gray-600">TypeScript</p>
             </div>
             <div>
               <h3 className="font-semibold text-lg mb-2">Backend</h3>
-              <p className="text-gray-600">.NET Core 8</p>
+              <p className="text-gray-600">.NET Core</p>
               <p className="text-gray-600">Entity Framework</p>
-              <p className="text-gray-600">PostgreSQL</p>
+              <p className="text-gray-600">SQL Server</p>
             </div>
           </div>
         </div>

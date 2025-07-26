@@ -18,10 +18,40 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      // ✅ Alias principal
+      "@/*": ["./src/*"],
+      
+      // ✅ Chemins corrigés pour votre structure actuelle
+      "@/components/*": ["./src/shared/components/*"],
+      "@/components/ui/*": ["./src/shared/components/ui/*"],
+      "@/components/layout/*": ["./src/shared/components/layout/*"],
+      
+      // ✅ Raccourcis directs vers ui (pour @/ui/Button)
+      "@/ui/*": ["./src/shared/components/ui/*"],
+      "@/ui": ["./src/shared/components/ui"],
+      
+      // ✅ Features modulaires
+      "@/features/*": ["./src/features/*"],
+      
+      // ✅ Services et API
+      "@/services/*": ["./src/shared/services/*"],
+      "@/lib/*": ["./src/shared/services/*"],
+      
+      // ✅ Utilitaires
+      "@/utils/*": ["./src/shared/utils/*"],
+      
+      // ✅ Types
+      "@/types/*": ["./src/shared/types/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts", 
+    "**/*.ts", 
+    "**/*.tsx", 
+    ".next/types/**/*.ts",
+    "src/**/*"
+  ],
   "exclude": ["node_modules"]
 }
