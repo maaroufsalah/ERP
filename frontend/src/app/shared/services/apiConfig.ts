@@ -8,12 +8,12 @@ const isProduction = typeof window !== 'undefined' &&
 // For client-side requests (from the browser)
 export const publicApiUrl = isProduction
   ? 'https://your-erp-api.com/api/'
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/');
+  : (process.env.NEXT_PUBLIC_API_URL || 'https://localhost:7003/api/');
 
 // For server-side requests (from the Next.js server)
 export const serverApiUrl = isProduction
   ? 'https://your-erp-api.com/api/'
-  : (process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/');
+  : (process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://localhost:7003/api/');
 
 // Use this function to get the correct API URL based on context
 export function getApiUrl() {
