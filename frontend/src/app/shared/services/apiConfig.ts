@@ -1,21 +1,33 @@
-﻿// app/shared/services/apiConfig.ts
+﻿// src/app/shared/services/apiConfig.ts
 
-// Determine if we're in production by checking the URL
-const isProduction = typeof window !== 'undefined' && 
-  (window.location.hostname.includes('digitalocean.app') || 
-   window.location.hostname.includes('erp-production'));
-
-// For client-side requests (from the browser)
-export const publicApiUrl = isProduction
-  ? 'https://your-erp-api.com/api/'
-  : (process.env.NEXT_PUBLIC_API_URL || 'https://localhost:7003/api/');
-
-// For server-side requests (from the Next.js server)
-export const serverApiUrl = isProduction
-  ? 'https://your-erp-api.com/api/'
-  : (process.env.SERVER_API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://localhost:7003/api/');
-
-// Use this function to get the correct API URL based on context
-export function getApiUrl() {
-  return typeof window === 'undefined' ? serverApiUrl : publicApiUrl;
+export function getApiUrl(): string {
+  // En mode développement, utiliser l'URL de votre API backend (HTTPS)
+  const developmentApiUrl = 'https://localhost:7003/api/';
+  
+  // En production, vous pouvez utiliser une variable d'environnement
+  const productionApiUrl = process.env.NEXT_PUBLIC_API_URL || developmentApiUrl;
+  
+  // Déterminer l'environnement
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  const baseUrl = isDevelopment ? developmentApiUrl : productionApiUrl;
+  
+  console.log('🔗 API Base URL:', baseUrl);
+  
+  return baseUrl;
 }
+
+export const API_ENDPOINTS = {
+  // Produits
+  PRODUCTS: 'products',
+  PRODUCTS_LIST: 'products/list',
+  PRODUCTS_SEARCH: 'products/search',
+  PRODUCTS_BY_CATEGORY: 'products/category',
+  PRODUCTS_BY_BRAND: 'products/brand',
+  PRODUCTS_BY_SUPPLIER: 'products/supplier',
+  PRODUCTS_LOW_STOCK: 'products/low-stock',
+  
+  // Autres endpoints futurs
+  // ORDERS: 'orders',
+  // CUSTOMERS: 'customers',
+} as const;

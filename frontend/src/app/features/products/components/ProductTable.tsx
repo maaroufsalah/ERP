@@ -1,8 +1,8 @@
-// src/features/products/components/ProductTable.tsx
+// src/app/features/products/components/ProductTable.tsx
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { useProducts } from '../hooks/useProducts';
 import { 
@@ -24,6 +24,7 @@ export default function ProductTable() {
     products,
     loading,
     error,
+    loadProducts,
     deleteProduct,
     searchProducts,
     clearError
@@ -33,22 +34,30 @@ export default function ProductTable() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+  // ✅ AJOUT : Chargement automatique des produits au montage du composant
+  useEffect(() => {
+    console.log('ProductTable mounted, loading products...');
+    loadProducts();
+  }, [loadProducts]);
+
   // Statistiques rapides
   const stats = {
     total: products.length,
-    lowStock: products.filter(p => p.isLowStock).length,
-    totalValue: products.reduce((sum, p) => sum + p.totalValue, 0),
+    lowStock: products.filter(p => p.stock && p.stock < 10).length, // Ajustement pour éviter les erreurs
+    totalValue: products.reduce((sum, p) => sum + (p.sellingPrice * (p.stock || 0)), 0),
     averageMargin: products.length > 0 
-      ? products.reduce((sum, p) => sum + p.marginPercentage, 0) / products.length 
+      ? products.reduce((sum, p) => sum + (p.marginPercentage || 0), 0) / products.length 
       : 0
   };
 
-  const categories = [...new Set(products.map(p => p.category))];
+  const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
       await searchProducts(searchTerm);
+    } else {
+      await loadProducts(); // Recharger tous les produits si recherche vide
     }
   };
 
@@ -57,7 +66,7 @@ export default function ProductTable() {
       try {
         await deleteProduct(id);
       } catch (error) {
-        // Error handled by hook
+        console.error('Erreur lors de la suppression:', error);
       }
     }
   };
@@ -74,14 +83,24 @@ export default function ProductTable() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Available': return 'bg-green-100 text-green-800';
-      case 'Sold': return 'bg-gray-100 text-gray-800';
-      case 'Reserved': return 'bg-yellow-100 text-yellow-800';
+    switch (status?.toLowerCase()) {
+      case 'available': return 'bg-green-100 text-green-800';
+      case 'sold': return 'bg-gray-100 text-gray-800';
+      case 'reserved': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
+  const getStatusText = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'available': return 'Disponible';
+      case 'sold': return 'Vendu';
+      case 'reserved': return 'Réservé';
+      default: return status || 'Inconnu';
+    }
+  };
+
+  // Affichage du loading initial
   if (loading && products.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -117,7 +136,7 @@ export default function ProductTable() {
                 onClick={clearError}
                 className="text-red-400 hover:text-red-600"
               >
-                ✕
+                ×
               </button>
             </div>
           </div>
@@ -125,50 +144,66 @@ export default function ProductTable() {
 
         {/* Statistiques */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-3 rounded-md bg-blue-50">
-                <Package className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Produits</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-3 rounded-md bg-green-50">
-                <DollarSign className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Valeur Totale</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalValue)}</p>
+          <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <Package className="h-8 w-8 text-blue-600" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Total Produits</dt>
+                    <dd className="text-2xl font-bold text-gray-900">{stats.total}</dd>
+                  </dl>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-3 rounded-md bg-purple-50">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Marge Moyenne</p>
-                <p className="text-2xl font-bold text-purple-600">{stats.averageMargin.toFixed(1)}%</p>
+          <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <DollarSign className="h-8 w-8 text-green-600" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Valeur Totale</dt>
+                    <dd className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalValue)}</dd>
+                  </dl>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex items-center">
-              <div className="p-3 rounded-md bg-red-50">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+          <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <TrendingUp className="h-8 w-8 text-purple-600" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Marge Moyenne</dt>
+                    <dd className="text-2xl font-bold text-purple-600">{stats.averageMargin.toFixed(1)}%</dd>
+                  </dl>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Stock Faible</p>
-                <p className="text-2xl font-bold text-red-600">{stats.lowStock}</p>
+            </div>
+          </div>
+
+          <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <AlertTriangle className="h-8 w-8 text-red-600" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Stock Faible</dt>
+                    <dd className="text-2xl font-bold text-red-600">{stats.lowStock}</dd>
+                  </dl>
+                </div>
               </div>
             </div>
           </div>
@@ -275,71 +310,66 @@ export default function ProductTable() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-12 w-12">
-                          <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">
-                              {product.brand.charAt(0)}
-                            </span>
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <Package className="h-5 w-5 text-white" />
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                          <div className="text-sm text-gray-500">{product.brand} - {product.model}</div>
-                          {product.storage && (
-                            <div className="text-xs text-gray-400">{product.storage} • {product.color}</div>
-                          )}
+                          <div className="text-sm font-medium text-gray-900">
+                            {product.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {product.brand} - {product.model}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {product.category}
+                          </div>
                         </div>
                       </div>
                     </td>
-
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{formatCurrency(product.sellingPrice)}</div>
-                      <div className="text-sm text-gray-500">
-                        Marge: {formatCurrency(product.margin)} ({product.marginPercentage.toFixed(1)}%)
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        Coût: {formatCurrency(product.totalCostPrice)}
+                      <div className="text-sm text-gray-900">
+                        <div className="font-medium">{formatCurrency(product.sellingPrice)}</div>
+                        <div className="text-gray-500">
+                          Achat: {formatCurrency(product.purchasePrice)}
+                        </div>
+                        <div className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          (product.marginPercentage || 0) > 20 ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
+                        }`}>
+                          {(product.marginPercentage || 0).toFixed(1)}% marge
+                        </div>
                       </div>
                     </td>
-
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <span className={`text-sm font-medium ${product.isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
-                          {product.stock}
-                        </span>
-                        {product.isLowStock && (
-                          <AlertTriangle className="ml-2 h-4 w-4 text-red-500" />
+                      <div className="text-sm text-gray-900">
+                        <div className="font-medium">{product.stock || 0} unités</div>
+                        {(product.stock || 0) < 10 && (
+                          <div className="text-red-600 text-xs font-medium">
+                            ⚠️ Stock faible
+                          </div>
                         )}
                       </div>
-                      <div className="text-sm text-gray-500">Min: {product.minStockLevel}</div>
-                      <div className="text-xs text-gray-400">Valeur: {formatCurrency(product.totalValue)}</div>
                     </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{product.supplierName}</div>
-                      <div className="text-sm text-gray-500">{product.supplierCity}</div>
-                      {product.importBatch && (
-                        <div className="text-xs text-gray-400">Lot: {product.importBatch}</div>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="font-medium">{product.supplier || 'Non défini'}</div>
+                      {product.supplierCity && (
+                        <div className="text-gray-500 text-xs">{product.supplierCity}</div>
                       )}
                     </td>
-
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(product.status)}`}>
-                        {product.status}
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(product.status || 'available')}`}>
+                        {getStatusText(product.status || 'available')}
                       </span>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {product.daysInStock} jours
-                      </div>
                     </td>
-
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
-                          title="Voir les détails"
+                          title="Voir"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -388,7 +418,7 @@ export default function ProductTable() {
           )}
         </div>
 
-        {/* Footer avec pagination (à implémenter) */}
+        {/* Footer avec pagination */}
         {products.length > 0 && (
           <div className="mt-6 bg-white px-6 py-3 border border-gray-200 rounded-lg">
             <div className="flex items-center justify-between">

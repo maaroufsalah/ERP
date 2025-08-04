@@ -271,8 +271,7 @@ export function useProducts(): UseProductsState & UseProductsActions {
 
   // ✅ CHARGEMENT INITIAL (optionnel)
   useEffect(() => {
-    // Décommentez si vous voulez charger automatiquement les produits
-    // loadProducts();
+    loadProducts();
   }, []);
 
   return {
