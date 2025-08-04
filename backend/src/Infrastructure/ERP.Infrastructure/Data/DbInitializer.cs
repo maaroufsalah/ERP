@@ -1,4 +1,5 @@
 ﻿using ERP.Domain.Entities;
+using ERP.Domain.Entities.Product;
 using ERP.Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +37,10 @@ namespace ERP.Infrastructure.Data
                 // Seed Admin Users (après que les rôles existent)
                 await SeedAdminUsersAsync(userManager, logger);
 
-                // Seed Sample Products (après que les utilisateurs existent)
+                // ✅ NOUVEAU: Seed des données de référence AVANT les produits
+                await SeedReferenceDataAsync(context, logger);
+
+                // Seed Sample Products (après que les références existent)
                 await SeedProductsAsync(context, logger);
 
                 logger.LogInformation("✅ Database initialization completed successfully");
@@ -47,6 +51,290 @@ namespace ERP.Infrastructure.Data
                 throw;
             }
         }
+
+        // ================================================================
+        // NOUVEAU: SEEDING DES DONNÉES DE RÉFÉRENCE
+        // ================================================================
+
+        private static async Task SeedReferenceDataAsync(ErpDbContext context, ILogger logger)
+        {
+            logger.LogInformation("🎯 Seeding reference data...");
+
+            // Seeding dans l'ordre des dépendances
+            await SeedProductTypesAsync(context, logger);
+            await SeedColorsAsync(context, logger);
+            await SeedConditionsAsync(context, logger);
+            await SeedBrandsAsync(context, logger);
+            await SeedModelsAsync(context, logger);
+
+            // Sauvegarder tous les changements
+            await context.SaveChangesAsync();
+            logger.LogInformation("✅ Reference data seeding completed");
+        }
+
+        private static async Task SeedProductTypesAsync(ErpDbContext context, ILogger logger)
+        {
+            if (await context.ProductTypes.AnyAsync())
+            {
+                logger.LogInformation("ℹ️ ProductTypes already exist, skipping...");
+                return;
+            }
+
+            logger.LogInformation("📱 Seeding ProductTypes...");
+
+            var productTypes = new[]
+            {
+                new ProductType
+                {
+                    Name = "Smartphone",
+                    Description = "Téléphones mobiles intelligents (Android, iOS)",
+                    SortOrder = 1,
+                    IconUrl = "📱",
+                    CategoryColor = "#007AFF",
+                    CreatedBy = "System"
+                },
+                new ProductType
+                {
+                    Name = "Laptop",
+                    Description = "Ordinateurs portables (Windows, macOS, Linux)",
+                    SortOrder = 2,
+                    IconUrl = "💻",
+                    CategoryColor = "#34C759",
+                    CreatedBy = "System"
+                },
+                new ProductType
+                {
+                    Name = "Tablet",
+                    Description = "Tablettes tactiles (iPad, Android, Windows)",
+                    SortOrder = 3,
+                    IconUrl = "📔",
+                    CategoryColor = "#FF9500",
+                    CreatedBy = "System"
+                },
+                new ProductType
+                {
+                    Name = "Camera",
+                    Description = "Appareils photo et caméras (DSLR, mirrorless, action cam)",
+                    SortOrder = 4,
+                    IconUrl = "📸",
+                    CategoryColor = "#FF3B30",
+                    CreatedBy = "System"
+                },
+                new ProductType
+                {
+                    Name = "Accessoire",
+                    Description = "Accessoires électroniques (coques, chargeurs, écouteurs, etc.)",
+                    SortOrder = 5,
+                    IconUrl = "🔌",
+                    CategoryColor = "#8E8E93",
+                    CreatedBy = "System"
+                }
+            };
+
+            await context.ProductTypes.AddRangeAsync(productTypes);
+            logger.LogInformation("✅ Added {Count} ProductTypes", productTypes.Length);
+        }
+
+        private static async Task SeedColorsAsync(ErpDbContext context, ILogger logger)
+        {
+            if (await context.Colors.AnyAsync())
+            {
+                logger.LogInformation("ℹ️ Colors already exist, skipping...");
+                return;
+            }
+
+            logger.LogInformation("🎨 Seeding Colors...");
+
+            var colors = new[]
+            {
+                new Color { Name = "Noir", HexCode = "#000000", SortOrder = 1, CreatedBy = "System" },
+                new Color { Name = "Blanc", HexCode = "#FFFFFF", SortOrder = 2, CreatedBy = "System" },
+                new Color { Name = "Gris", HexCode = "#808080", SortOrder = 3, CreatedBy = "System" },
+                new Color { Name = "Gris Sidéral", HexCode = "#666666", SortOrder = 4, CreatedBy = "System" },
+                new Color { Name = "Bleu", HexCode = "#0066CC", SortOrder = 5, CreatedBy = "System" },
+                new Color { Name = "Bleu Titane", HexCode = "#4A90E2", SortOrder = 6, CreatedBy = "System" },
+                new Color { Name = "Rouge", HexCode = "#FF0000", SortOrder = 7, CreatedBy = "System" },
+                new Color { Name = "Rose", HexCode = "#FFB6C1", SortOrder = 8, CreatedBy = "System" },
+                new Color { Name = "Violet", HexCode = "#8A2BE2", SortOrder = 9, CreatedBy = "System" },
+                new Color { Name = "Vert", HexCode = "#00FF00", SortOrder = 10, CreatedBy = "System" },
+                new Color { Name = "Jaune", HexCode = "#FFFF00", SortOrder = 11, CreatedBy = "System" },
+                new Color { Name = "Or", HexCode = "#FFD700", SortOrder = 12, CreatedBy = "System" },
+                new Color { Name = "Argent", HexCode = "#C0C0C0", SortOrder = 13, CreatedBy = "System" },
+                new Color { Name = "Platine", HexCode = "#E5E4E2", SortOrder = 14, CreatedBy = "System" }
+            };
+
+            await context.Colors.AddRangeAsync(colors);
+            logger.LogInformation("✅ Added {Count} Colors", colors.Length);
+        }
+
+        private static async Task SeedConditionsAsync(ErpDbContext context, ILogger logger)
+        {
+            if (await context.Conditions.AnyAsync())
+            {
+                logger.LogInformation("ℹ️ Conditions already exist, skipping...");
+                return;
+            }
+
+            logger.LogInformation("⭐ Seeding Conditions...");
+
+            var conditions = new[]
+            {
+                new Condition
+                {
+                    Name = "Neuf",
+                    Description = "Produit jamais utilisé, emballage d'origine intact, garantie constructeur complète",
+                    QualityPercentage = 100,
+                    SortOrder = 1,
+                    CreatedBy = "System"
+                },
+                new Condition
+                {
+                    Name = "Excellent",
+                    Description = "Produit en parfait état de fonctionnement, aucune rayure visible, très peu utilisé",
+                    QualityPercentage = 95,
+                    SortOrder = 2,
+                    CreatedBy = "System"
+                },
+                new Condition
+                {
+                    Name = "Très Bon",
+                    Description = "Produit en très bon état, quelques micro-rayures invisibles à l'usage normal",
+                    QualityPercentage = 90,
+                    SortOrder = 3,
+                    CreatedBy = "System"
+                },
+                new Condition
+                {
+                    Name = "Bon",
+                    Description = "Produit en bon état avec quelques signes d'usage visibles mais n'affectant pas le fonctionnement",
+                    QualityPercentage = 80,
+                    SortOrder = 4,
+                    CreatedBy = "System"
+                },
+                new Condition
+                {
+                    Name = "Correct",
+                    Description = "Produit fonctionnel avec des signes d'usage importants, rayures ou marques visibles",
+                    QualityPercentage = 70,
+                    SortOrder = 5,
+                    CreatedBy = "System"
+                }
+            };
+
+            await context.Conditions.AddRangeAsync(conditions);
+            logger.LogInformation("✅ Added {Count} Conditions", conditions.Length);
+        }
+
+        private static async Task SeedBrandsAsync(ErpDbContext context, ILogger logger)
+        {
+            if (await context.Brands.AnyAsync())
+            {
+                logger.LogInformation("ℹ️ Brands already exist, skipping...");
+                return;
+            }
+
+            logger.LogInformation("🏷️ Seeding Brands...");
+
+            // Récupérer les IDs des types
+            var smartphoneType = await context.ProductTypes.FirstAsync(pt => pt.Name == "Smartphone");
+            var laptopType = await context.ProductTypes.FirstAsync(pt => pt.Name == "Laptop");
+            var tabletType = await context.ProductTypes.FirstAsync(pt => pt.Name == "Tablet");
+            var cameraType = await context.ProductTypes.FirstAsync(pt => pt.Name == "Camera");
+            var accessoireType = await context.ProductTypes.FirstAsync(pt => pt.Name == "Accessoire");
+
+            var brands = new[]
+            {
+                // Smartphones
+                new Brand { Name = "Samsung", ProductTypeId = smartphoneType.Id, SortOrder = 1, CreatedBy = "System" },
+                new Brand { Name = "Apple", ProductTypeId = smartphoneType.Id, SortOrder = 2, CreatedBy = "System" },
+                new Brand { Name = "Xiaomi", ProductTypeId = smartphoneType.Id, SortOrder = 3, CreatedBy = "System" },
+                new Brand { Name = "OnePlus", ProductTypeId = smartphoneType.Id, SortOrder = 4, CreatedBy = "System" },
+                new Brand { Name = "Google", ProductTypeId = smartphoneType.Id, SortOrder = 5, CreatedBy = "System" },
+
+                // Laptops
+                new Brand { Name = "Apple", ProductTypeId = laptopType.Id, SortOrder = 1, CreatedBy = "System" },
+                new Brand { Name = "Dell", ProductTypeId = laptopType.Id, SortOrder = 2, CreatedBy = "System" },
+                new Brand { Name = "HP", ProductTypeId = laptopType.Id, SortOrder = 3, CreatedBy = "System" },
+                new Brand { Name = "Lenovo", ProductTypeId = laptopType.Id, SortOrder = 4, CreatedBy = "System" },
+                new Brand { Name = "ASUS", ProductTypeId = laptopType.Id, SortOrder = 5, CreatedBy = "System" },
+
+                // Tablets
+                new Brand { Name = "Apple", ProductTypeId = tabletType.Id, SortOrder = 1, CreatedBy = "System" },
+                new Brand { Name = "Samsung", ProductTypeId = tabletType.Id, SortOrder = 2, CreatedBy = "System" },
+                new Brand { Name = "Microsoft", ProductTypeId = tabletType.Id, SortOrder = 3, CreatedBy = "System" },
+
+                // Cameras
+                new Brand { Name = "Canon", ProductTypeId = cameraType.Id, SortOrder = 1, CreatedBy = "System" },
+                new Brand { Name = "Nikon", ProductTypeId = cameraType.Id, SortOrder = 2, CreatedBy = "System" },
+                new Brand { Name = "Sony", ProductTypeId = cameraType.Id, SortOrder = 3, CreatedBy = "System" },
+                new Brand { Name = "GoPro", ProductTypeId = cameraType.Id, SortOrder = 4, CreatedBy = "System" },
+
+                // Accessoires
+                new Brand { Name = "Anker", ProductTypeId = accessoireType.Id, SortOrder = 1, CreatedBy = "System" },
+                new Brand { Name = "Belkin", ProductTypeId = accessoireType.Id, SortOrder = 2, CreatedBy = "System" },
+                new Brand { Name = "Logitech", ProductTypeId = accessoireType.Id, SortOrder = 3, CreatedBy = "System" }
+            };
+
+            await context.Brands.AddRangeAsync(brands);
+            logger.LogInformation("✅ Added {Count} Brands", brands.Length);
+        }
+
+        private static async Task SeedModelsAsync(ErpDbContext context, ILogger logger)
+        {
+            if (await context.Models.AnyAsync())
+            {
+                logger.LogInformation("ℹ️ Models already exist, skipping...");
+                return;
+            }
+
+            logger.LogInformation("📋 Seeding Models...");
+
+            // Récupérer les types
+            var smartphoneType = await context.ProductTypes.FirstAsync(pt => pt.Name == "Smartphone");
+            var laptopType = await context.ProductTypes.FirstAsync(pt => pt.Name == "Laptop");
+            var tabletType = await context.ProductTypes.FirstAsync(pt => pt.Name == "Tablet");
+
+            // Récupérer les marques
+            var samsungSmartphone = await context.Brands.FirstAsync(b => b.Name == "Samsung" && b.ProductTypeId == smartphoneType.Id);
+            var appleSmartphone = await context.Brands.FirstAsync(b => b.Name == "Apple" && b.ProductTypeId == smartphoneType.Id);
+            var appleLaptop = await context.Brands.FirstAsync(b => b.Name == "Apple" && b.ProductTypeId == laptopType.Id);
+            var dellLaptop = await context.Brands.FirstAsync(b => b.Name == "Dell" && b.ProductTypeId == laptopType.Id);
+            var appleTablet = await context.Brands.FirstAsync(b => b.Name == "Apple" && b.ProductTypeId == tabletType.Id);
+
+            var models = new[]
+            {
+                // Samsung Smartphones
+                new Model { Name = "Galaxy S24 Ultra", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2024, SortOrder = 1, CreatedBy = "System" },
+                new Model { Name = "Galaxy S24", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2024, SortOrder = 2, CreatedBy = "System" },
+                new Model { Name = "Galaxy A55", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2024, SortOrder = 3, CreatedBy = "System" },
+                new Model { Name = "Galaxy A34", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2023, SortOrder = 4, CreatedBy = "System" },
+
+                // Apple Smartphones
+                new Model { Name = "iPhone 15 Pro Max", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2023, SortOrder = 1, CreatedBy = "System" },
+                new Model { Name = "iPhone 15 Pro", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2023, SortOrder = 2, CreatedBy = "System" },
+                new Model { Name = "iPhone 15", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2023, SortOrder = 3, CreatedBy = "System" },
+                new Model { Name = "iPhone 14", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2022, SortOrder = 4, CreatedBy = "System" },
+
+                // Apple Laptops
+                new Model { Name = "MacBook Air M2", ProductTypeId = laptopType.Id, BrandId = appleLaptop.Id, ReleaseYear = 2022, SortOrder = 1, CreatedBy = "System" },
+                new Model { Name = "MacBook Pro 14\"", ProductTypeId = laptopType.Id, BrandId = appleLaptop.Id, ReleaseYear = 2023, SortOrder = 2, CreatedBy = "System" },
+
+                // Dell Laptops
+                new Model { Name = "XPS 13 Plus", ProductTypeId = laptopType.Id, BrandId = dellLaptop.Id, ReleaseYear = 2022, SortOrder = 1, CreatedBy = "System" },
+                new Model { Name = "Inspiron 15 3000", ProductTypeId = laptopType.Id, BrandId = dellLaptop.Id, ReleaseYear = 2023, SortOrder = 2, CreatedBy = "System" },
+
+                // Apple Tablets
+                new Model { Name = "iPad Air 5", ProductTypeId = tabletType.Id, BrandId = appleTablet.Id, ReleaseYear = 2022, SortOrder = 1, CreatedBy = "System" },
+                new Model { Name = "iPad Pro 12.9\"", ProductTypeId = tabletType.Id, BrandId = appleTablet.Id, ReleaseYear = 2022, SortOrder = 2, CreatedBy = "System" }
+            };
+
+            await context.Models.AddRangeAsync(models);
+            logger.LogInformation("✅ Added {Count} Models", models.Length);
+        }
+
+        // ================================================================
+        // MÉTHODES EXISTANTES (INCHANGÉES)
+        // ================================================================
 
         private static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager, ILogger logger)
         {
@@ -93,28 +381,59 @@ namespace ERP.Infrastructure.Data
             await AddUserAsync(userManager, logger, "manager", "Manager", "ERP", "manager@erp.com", "manager123!", "Manager");
         }
 
+        // ================================================================
+        // PRODUITS MODIFIÉS POUR UTILISER LES RÉFÉRENCES
+        // ================================================================
+
         private static async Task SeedProductsAsync(ErpDbContext context, ILogger logger)
         {
             logger.LogInformation("📱 Seeding sample products...");
 
             if (!await context.Products.AnyAsync())
             {
+                // Récupérer les IDs des références pour créer les produits
+                var smartphoneType = await context.ProductTypes.FirstAsync(pt => pt.Name == "Smartphone");
+                var laptopType = await context.ProductTypes.FirstAsync(pt => pt.Name == "Laptop");
+                var tabletType = await context.ProductTypes.FirstAsync(pt => pt.Name == "Tablet");
+
+                var samsungSmartphone = await context.Brands.FirstAsync(b => b.Name == "Samsung" && b.ProductTypeId == smartphoneType.Id);
+                var appleSmartphone = await context.Brands.FirstAsync(b => b.Name == "Apple" && b.ProductTypeId == smartphoneType.Id);
+                var appleLaptop = await context.Brands.FirstAsync(b => b.Name == "Apple" && b.ProductTypeId == laptopType.Id);
+                var dellLaptop = await context.Brands.FirstAsync(b => b.Name == "Dell" && b.ProductTypeId == laptopType.Id);
+                var appleTablet = await context.Brands.FirstAsync(b => b.Name == "Apple" && b.ProductTypeId == tabletType.Id);
+
+                var galaxyA55 = await context.Models.FirstAsync(m => m.Name == "Galaxy A55");
+                var iphone15 = await context.Models.FirstAsync(m => m.Name == "iPhone 15");
+                var galaxyA34 = await context.Models.FirstAsync(m => m.Name == "Galaxy A34");
+                var xps13 = await context.Models.FirstAsync(m => m.Name == "XPS 13 Plus");
+                var macbookAir = await context.Models.FirstAsync(m => m.Name == "MacBook Air M2");
+                var ipadAir = await context.Models.FirstAsync(m => m.Name == "iPad Air 5");
+
+                var colorBleu = await context.Colors.FirstAsync(c => c.Name == "Bleu");
+                var colorNoir = await context.Colors.FirstAsync(c => c.Name == "Noir");
+                var colorViolet = await context.Colors.FirstAsync(c => c.Name == "Violet");
+                var colorPlatine = await context.Colors.FirstAsync(c => c.Name == "Platine");
+                var colorGrisSideral = await context.Colors.FirstAsync(c => c.Name == "Gris Sidéral");
+
+                var conditionTresBon = await context.Conditions.FirstAsync(c => c.Name == "Très Bon");
+                var conditionNeuf = await context.Conditions.FirstAsync(c => c.Name == "Neuf");
+                var conditionBon = await context.Conditions.FirstAsync(c => c.Name == "Bon");
+
                 var products = new List<Product>
                 {
-                    // SMARTPHONES
+                    // SMARTPHONES avec nouvelles relations
                     new Product
                     {
                         Name = "Samsung Galaxy A55 5G",
                         Description = "Smartphone Samsung Galaxy A55 5G 8/256GB en excellent état",
-                        Category = "Smartphones",
-                        Brand = "Samsung",
-                        Model = "Galaxy A55",
+                        ProductTypeId = smartphoneType.Id,
+                        BrandId = samsungSmartphone.Id,
+                        ModelId = galaxyA55.Id,
+                        ColorId = colorBleu.Id,
+                        ConditionId = conditionTresBon.Id,
                         Storage = "256GB",
                         Memory = "8GB",
-                        Color = "Bleu",
                         ScreenSize = "6.6\"",
-                        Condition = "Très bon état",
-                        ConditionGrade = "A",
                         PurchasePrice = 200.00m,
                         TransportCost = 15.00m,
                         TotalCostPrice = 215.00m,
@@ -137,14 +456,13 @@ namespace ERP.Infrastructure.Data
                     {
                         Name = "iPhone 15 128GB",
                         Description = "Apple iPhone 15 128GB Noir en parfait état avec boîte",
-                        Category = "Smartphones",
-                        Brand = "Apple",
-                        Model = "iPhone 15",
+                        ProductTypeId = smartphoneType.Id,
+                        BrandId = appleSmartphone.Id,
+                        ModelId = iphone15.Id,
+                        ColorId = colorNoir.Id,
+                        ConditionId = conditionNeuf.Id,
                         Storage = "128GB",
-                        Color = "Noir",
                         ScreenSize = "6.1\"",
-                        Condition = "Neuf",
-                        ConditionGrade = "A+",
                         PurchasePrice = 650.00m,
                         TransportCost = 20.00m,
                         TotalCostPrice = 670.00m,
@@ -168,15 +486,14 @@ namespace ERP.Infrastructure.Data
                     {
                         Name = "Samsung Galaxy A34 5G",
                         Description = "Samsung Galaxy A34 5G 6/128GB Violet occasion",
-                        Category = "Smartphones",
-                        Brand = "Samsung",
-                        Model = "Galaxy A34",
+                        ProductTypeId = smartphoneType.Id,
+                        BrandId = samsungSmartphone.Id,
+                        ModelId = galaxyA34.Id,
+                        ColorId = colorViolet.Id,
+                        ConditionId = conditionBon.Id,
                         Storage = "128GB",
                         Memory = "6GB",
-                        Color = "Violet",
                         ScreenSize = "6.6\"",
-                        Condition = "Bon état",
-                        ConditionGrade = "B+",
                         PurchasePrice = 150.00m,
                         TransportCost = 12.00m,
                         TotalCostPrice = 162.00m,
@@ -196,21 +513,20 @@ namespace ERP.Infrastructure.Data
                         CreatedBy = "System"
                     },
 
-                    // LAPTOPS
+                    // LAPTOPS avec nouvelles relations
                     new Product
                     {
                         Name = "Dell XPS 13 Plus",
                         Description = "Ordinateur portable Dell XPS 13 Plus Intel i7 16GB 512GB",
-                        Category = "Laptops",
-                        Brand = "Dell",
-                        Model = "XPS 13 Plus",
+                        ProductTypeId = laptopType.Id,
+                        BrandId = dellLaptop.Id,
+                        ModelId = xps13.Id,
+                        ColorId = colorPlatine.Id,
+                        ConditionId = conditionTresBon.Id,
                         Storage = "512GB SSD",
                         Memory = "16GB",
                         Processor = "Intel Core i7-12700H",
                         ScreenSize = "13.4\"",
-                        Color = "Platine",
-                        Condition = "Très bon état",
-                        ConditionGrade = "A",
                         PurchasePrice = 800.00m,
                         TransportCost = 35.00m,
                         TotalCostPrice = 835.00m,
@@ -234,16 +550,15 @@ namespace ERP.Infrastructure.Data
                     {
                         Name = "MacBook Air M2",
                         Description = "Apple MacBook Air 13\" M2 8GB 256GB Gris Sidéral",
-                        Category = "Laptops",
-                        Brand = "Apple",
-                        Model = "MacBook Air M2",
+                        ProductTypeId = laptopType.Id,
+                        BrandId = appleLaptop.Id,
+                        ModelId = macbookAir.Id,
+                        ColorId = colorGrisSideral.Id,
+                        ConditionId = conditionNeuf.Id,
                         Storage = "256GB SSD",
                         Memory = "8GB",
                         Processor = "Apple M2",
                         ScreenSize = "13.6\"",
-                        Color = "Gris Sidéral",
-                        Condition = "Neuf",
-                        ConditionGrade = "A+",
                         PurchasePrice = 950.00m,
                         TransportCost = 40.00m,
                         TotalCostPrice = 990.00m,
@@ -263,19 +578,18 @@ namespace ERP.Infrastructure.Data
                         CreatedBy = "System"
                     },
 
-                    // TABLETS
+                    // TABLETS avec nouvelles relations
                     new Product
                     {
                         Name = "iPad Air 5th Gen",
                         Description = "Apple iPad Air 5e génération 64GB WiFi Bleu",
-                        Category = "Tablets",
-                        Brand = "Apple",
-                        Model = "iPad Air 5",
+                        ProductTypeId = tabletType.Id,
+                        BrandId = appleTablet.Id,
+                        ModelId = ipadAir.Id,
+                        ColorId = colorBleu.Id,
+                        ConditionId = conditionTresBon.Id,
                         Storage = "64GB",
                         ScreenSize = "10.9\"",
-                        Color = "Bleu",
-                        Condition = "Très bon état",
-                        ConditionGrade = "A",
                         PurchasePrice = 400.00m,
                         TransportCost = 18.00m,
                         TotalCostPrice = 418.00m,
@@ -291,36 +605,6 @@ namespace ERP.Infrastructure.Data
                         ImportBatch = "IT2025002",
                         InvoiceNumber = "INV-2025-006",
                         Status = "Available",
-                        CreatedBy = "System"
-                    },
-
-                    // ACCESSOIRES
-                    new Product
-                    {
-                        Name = "AirPods Pro 2nd Gen",
-                        Description = "Apple AirPods Pro 2e génération avec boîtier de charge MagSafe",
-                        Category = "Accessoires",
-                        Brand = "Apple",
-                        Model = "AirPods Pro 2",
-                        Color = "Blanc",
-                        Condition = "Neuf",
-                        ConditionGrade = "A+",
-                        PurchasePrice = 180.00m,
-                        TransportCost = 8.00m,
-                        TotalCostPrice = 188.00m,
-                        SellingPrice = 249.00m,
-                        Margin = 61.00m,
-                        MarginPercentage = 32.45m,
-                        Stock = 10,
-                        MinStockLevel = 5,
-                        SupplierName = "AudioItalia",
-                        SupplierCity = "Firenze",
-                        PurchaseDate = DateTime.UtcNow.AddDays(-10),
-                        ArrivalDate = DateTime.UtcNow.AddDays(-6),
-                        ImportBatch = "IT2025003",
-                        InvoiceNumber = "INV-2025-007",
-                        Status = "Available",
-                        WarrantyInfo = "Garantie Apple 1 an",
                         CreatedBy = "System"
                     }
                 };

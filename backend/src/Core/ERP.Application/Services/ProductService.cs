@@ -2,7 +2,7 @@
 using ERP.Application.DTOs;
 using ERP.Application.Interfaces;
 using ERP.Application.Interfaces.IServices;
-using ERP.Domain.Entities;
+using ERP.Domain.Entities.Product;
 using Microsoft.Extensions.Logging;
 using Serilog;
 

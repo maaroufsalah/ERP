@@ -3,8 +3,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Product } from '../types';
+import { Product, CreateProductDto } from '../types';
 import { useProducts } from '../hooks/useProducts';
+import CreateProductModal from './CreateProductModal';
 import { 
   Search, 
   Plus, 
@@ -25,6 +26,7 @@ export default function ProductTable() {
     loading,
     error,
     loadProducts,
+    createProduct,
     deleteProduct,
     searchProducts,
     clearError
@@ -33,6 +35,9 @@ export default function ProductTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  
+  // ✅ AJOUT : État pour le modal de création
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // ✅ AJOUT : Chargement automatique des produits au montage du composant
   useEffect(() => {
@@ -43,7 +48,7 @@ export default function ProductTable() {
   // Statistiques rapides
   const stats = {
     total: products.length,
-    lowStock: products.filter(p => p.stock && p.stock < 10).length, // Ajustement pour éviter les erreurs
+    lowStock: products.filter(p => p.stock && p.stock < 10).length,
     totalValue: products.reduce((sum, p) => sum + (p.sellingPrice * (p.stock || 0)), 0),
     averageMargin: products.length > 0 
       ? products.reduce((sum, p) => sum + (p.marginPercentage || 0), 0) / products.length 
@@ -52,12 +57,24 @@ export default function ProductTable() {
 
   const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // ✅ AJOUT : Gestionnaire pour la création de produit
+  const handleCreateProduct = async (productData: CreateProductDto) => {
+    try {
+      await createProduct(productData);
+      setIsCreateModalOpen(false);
+      // Le hook se charge de mettre à jour la liste automatiquement
+    } catch (error) {
+      // L'erreur est déjà gérée par le hook et affichée via toast
+      console.error('Erreur lors de la création du produit:', error);
+    }
+  };
+
+  const handleSearch = async (e?: any) => {
+    if (e) e.preventDefault();
     if (searchTerm.trim()) {
       await searchProducts(searchTerm);
     } else {
-      await loadProducts(); // Recharger tous les produits si recherche vide
+      await loadProducts();
     }
   };
 
@@ -215,7 +232,7 @@ export default function ProductTable() {
             
             {/* Recherche et filtres */}
             <div className="flex flex-1 space-x-4">
-              <form onSubmit={handleSearch} className="flex space-x-2">
+              <div className="flex space-x-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
@@ -223,16 +240,22 @@ export default function ProductTable() {
                     placeholder="Rechercher un produit..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSearch(e as any);
+                      }
+                    }}
                     className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSearch}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
                   Rechercher
                 </button>
-              </form>
+              </div>
 
               <button
                 onClick={() => setShowFilters(!showFilters)}
@@ -243,8 +266,11 @@ export default function ProductTable() {
               </button>
             </div>
 
-            {/* Bouton d'ajout */}
-            <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+            {/* ✅ MODIFICATION : Bouton d'ajout connecté au modal */}
+            <button 
+              onClick={() => setIsCreateModalOpen(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un produit
             </button>
@@ -355,7 +381,7 @@ export default function ProductTable() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="font-medium">{product.supplier || 'Non défini'}</div>
+                      <div className="font-medium">{product.supplierName || 'Non défini'}</div>
                       {product.supplierCity && (
                         <div className="text-gray-500 text-xs">{product.supplierCity}</div>
                       )}
@@ -409,7 +435,10 @@ export default function ProductTable() {
                 Commencez par ajouter votre premier produit.
               </p>
               <div className="mt-6">
-                <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <button 
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Ajouter un produit
                 </button>
@@ -433,6 +462,14 @@ export default function ProductTable() {
           </div>
         )}
       </div>
+
+      {/* ✅ AJOUT : Modal de création */}
+      <CreateProductModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateProduct}
+        loading={loading}
+      />
     </div>
   );
 }

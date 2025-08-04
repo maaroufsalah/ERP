@@ -69,14 +69,17 @@ export function useProducts(): UseProductsState & UseProductsActions {
     }
   }, [updateState]);
 
+  // ✅ FIX : Correction de la fonction createProduct
   const createProduct = useCallback(async (product: CreateProductDto) => {
     updateState({ loading: true, error: null });
     try {
       const newProduct = await productService.createProduct(product);
-      updateState({ 
-        products: [...state.products, newProduct],
+      // ✅ Utiliser une fonction pour accéder à l'état actuel
+      setState(prevState => ({
+        ...prevState,
+        products: [...prevState.products, newProduct],
         loading: false 
-      });
+      }));
     } catch (error: any) {
       updateState({ 
         error: error.message || 'Erreur lors de la création du produit',
@@ -84,17 +87,19 @@ export function useProducts(): UseProductsState & UseProductsActions {
       });
       throw error; // Re-throw pour que le composant puisse gérer
     }
-  }, [state.products, updateState]);
+  }, [updateState]);
 
+  // ✅ FIX : Correction de la fonction updateProduct
   const updateProduct = useCallback(async (id: number, product: UpdateProductDto) => {
     updateState({ loading: true, error: null });
     try {
       const updatedProduct = await productService.updateProduct(id, product);
-      updateState({
-        products: state.products.map(p => p.id === id ? updatedProduct : p),
-        selectedProduct: state.selectedProduct?.id === id ? updatedProduct : state.selectedProduct,
+      setState(prevState => ({
+        ...prevState,
+        products: prevState.products.map(p => p.id === id ? updatedProduct : p),
+        selectedProduct: prevState.selectedProduct?.id === id ? updatedProduct : prevState.selectedProduct,
         loading: false
-      });
+      }));
     } catch (error: any) {
       updateState({ 
         error: error.message || 'Erreur lors de la mise à jour du produit',
@@ -102,17 +107,19 @@ export function useProducts(): UseProductsState & UseProductsActions {
       });
       throw error;
     }
-  }, [state.products, state.selectedProduct, updateState]);
+  }, [updateState]);
 
+  // ✅ FIX : Correction de la fonction deleteProduct
   const deleteProduct = useCallback(async (id: number) => {
     updateState({ loading: true, error: null });
     try {
       await productService.deleteProduct(id);
-      updateState({
-        products: state.products.filter(p => p.id !== id),
-        selectedProduct: state.selectedProduct?.id === id ? null : state.selectedProduct,
+      setState(prevState => ({
+        ...prevState,
+        products: prevState.products.filter(p => p.id !== id),
+        selectedProduct: prevState.selectedProduct?.id === id ? null : prevState.selectedProduct,
         loading: false
-      });
+      }));
     } catch (error: any) {
       updateState({ 
         error: error.message || 'Erreur lors de la suppression du produit',
@@ -120,7 +127,7 @@ export function useProducts(): UseProductsState & UseProductsActions {
       });
       throw error;
     }
-  }, [state.products, state.selectedProduct, updateState]);
+  }, [updateState]);
 
   // ✅ ACTIONS DE RECHERCHE
 
@@ -188,17 +195,18 @@ export function useProducts(): UseProductsState & UseProductsActions {
       await productService.updateStock(id, newStock);
       // Recharger le produit spécifique pour avoir les données à jour
       const updatedProduct = await productService.getProductById(id);
-      updateState({
-        products: state.products.map(p => p.id === id ? updatedProduct : p),
-        selectedProduct: state.selectedProduct?.id === id ? updatedProduct : state.selectedProduct
-      });
+      setState(prevState => ({
+        ...prevState,
+        products: prevState.products.map(p => p.id === id ? updatedProduct : p),
+        selectedProduct: prevState.selectedProduct?.id === id ? updatedProduct : prevState.selectedProduct
+      }));
     } catch (error: any) {
       updateState({ 
         error: error.message || 'Erreur lors de la mise à jour du stock'
       });
       throw error;
     }
-  }, [state.products, state.selectedProduct, updateState]);
+  }, [updateState]);
 
   // ✅ ACTIONS DE STATUT
 
@@ -206,49 +214,52 @@ export function useProducts(): UseProductsState & UseProductsActions {
     try {
       await productService.markAsSold(id);
       const updatedProduct = await productService.getProductById(id);
-      updateState({
-        products: state.products.map(p => p.id === id ? updatedProduct : p),
-        selectedProduct: state.selectedProduct?.id === id ? updatedProduct : state.selectedProduct
-      });
+      setState(prevState => ({
+        ...prevState,
+        products: prevState.products.map(p => p.id === id ? updatedProduct : p),
+        selectedProduct: prevState.selectedProduct?.id === id ? updatedProduct : prevState.selectedProduct
+      }));
     } catch (error: any) {
       updateState({ 
         error: error.message || 'Erreur lors du marquage comme vendu'
       });
       throw error;
     }
-  }, [state.products, state.selectedProduct, updateState]);
+  }, [updateState]);
 
   const markAsReserved = useCallback(async (id: number) => {
     try {
       await productService.markAsReserved(id);
       const updatedProduct = await productService.getProductById(id);
-      updateState({
-        products: state.products.map(p => p.id === id ? updatedProduct : p),
-        selectedProduct: state.selectedProduct?.id === id ? updatedProduct : state.selectedProduct
-      });
+      setState(prevState => ({
+        ...prevState,
+        products: prevState.products.map(p => p.id === id ? updatedProduct : p),
+        selectedProduct: prevState.selectedProduct?.id === id ? updatedProduct : prevState.selectedProduct
+      }));
     } catch (error: any) {
       updateState({ 
         error: error.message || 'Erreur lors du marquage comme réservé'
       });
       throw error;
     }
-  }, [state.products, state.selectedProduct, updateState]);
+  }, [updateState]);
 
   const markAsAvailable = useCallback(async (id: number) => {
     try {
       await productService.markAsAvailable(id);
       const updatedProduct = await productService.getProductById(id);
-      updateState({
-        products: state.products.map(p => p.id === id ? updatedProduct : p),
-        selectedProduct: state.selectedProduct?.id === id ? updatedProduct : state.selectedProduct
-      });
+      setState(prevState => ({
+        ...prevState,
+        products: prevState.products.map(p => p.id === id ? updatedProduct : p),
+        selectedProduct: prevState.selectedProduct?.id === id ? updatedProduct : prevState.selectedProduct
+      }));
     } catch (error: any) {
       updateState({ 
         error: error.message || 'Erreur lors du marquage comme disponible'
       });
       throw error;
     }
-  }, [state.products, state.selectedProduct, updateState]);
+  }, [updateState]);
 
   // ✅ ACTIONS UTILITAIRES
 
@@ -269,10 +280,10 @@ export function useProducts(): UseProductsState & UseProductsActions {
     updateState({ error: null });
   }, [updateState]);
 
-  // ✅ CHARGEMENT INITIAL (optionnel)
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  // ✅ CHARGEMENT INITIAL (optionnel - retiré car peut causer des boucles)
+  // useEffect(() => {
+  //   loadProducts();
+  // }, []);
 
   return {
     // État
