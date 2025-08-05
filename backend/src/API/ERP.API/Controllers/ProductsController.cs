@@ -25,7 +25,6 @@ namespace ERP.API.Controllers
         /// <summary>
         /// Récupère tous les produits
         /// </summary>
-        /// <returns>Liste complète des produits actifs</returns>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<ProductDto>), 200)]
         [ProducesResponseType(500)]
@@ -45,30 +44,8 @@ namespace ERP.API.Controllers
         }
 
         /// <summary>
-        /// Récupère la liste allégée des produits pour l'affichage
-        /// </summary>
-        /// <returns>Liste allégée des produits</returns>
-        [HttpGet("list")]
-        [ProducesResponseType(typeof(IEnumerable<ProductForListDto>), 200)]
-        public async Task<ActionResult<IEnumerable<ProductForListDto>>> GetProductsList()
-        {
-            try
-            {
-                var products = await _productService.GetProductsForListAsync();
-                return Ok(products);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la récupération de la liste des produits");
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        /// <summary>
         /// Récupère un produit par son ID
         /// </summary>
-        /// <param name="id">ID du produit</param>
-        /// <returns>Le produit demandé</returns>
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ProductDto), 200)]
         [ProducesResponseType(404)]
@@ -98,8 +75,6 @@ namespace ERP.API.Controllers
         /// <summary>
         /// Crée un nouveau produit
         /// </summary>
-        /// <param name="createProductDto">Données du produit à créer</param>
-        /// <returns>Le produit créé</returns>
         [HttpPost]
         [ProducesResponseType(typeof(ProductDto), 201)]
         [ProducesResponseType(400)]
@@ -130,9 +105,6 @@ namespace ERP.API.Controllers
         /// <summary>
         /// Met à jour un produit existant
         /// </summary>
-        /// <param name="id">ID du produit à mettre à jour</param>
-        /// <param name="updateProductDto">Nouvelles données du produit</param>
-        /// <returns>Le produit mis à jour</returns>
         [HttpPut("{id}")]
         [ProducesResponseType(typeof(ProductDto), 200)]
         [ProducesResponseType(400)]
@@ -170,8 +142,6 @@ namespace ERP.API.Controllers
         /// <summary>
         /// Supprime un produit (suppression logique)
         /// </summary>
-        /// <param name="id">ID du produit à supprimer</param>
-        /// <returns>Confirmation de suppression</returns>
         [HttpDelete("{id}")]
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
@@ -204,8 +174,6 @@ namespace ERP.API.Controllers
         /// <summary>
         /// Recherche des produits par terme global
         /// </summary>
-        /// <param name="query">Terme de recherche</param>
-        /// <returns>Liste des produits correspondants</returns>
         [HttpGet("search")]
         [ProducesResponseType(typeof(IEnumerable<ProductDto>), 200)]
         [ProducesResponseType(400)]
@@ -233,25 +201,23 @@ namespace ERP.API.Controllers
         }
 
         /// <summary>
-        /// Récupère les produits par catégorie
+        /// Récupère les produits par type de produit
         /// </summary>
-        /// <param name="category">Nom de la catégorie</param>
-        /// <returns>Liste des produits de la catégorie</returns>
-        [HttpGet("category/{category}")]
+        [HttpGet("type/{productTypeId}")]
         [ProducesResponseType(typeof(IEnumerable<ProductDto>), 200)]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsByCategory(string category)
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsByProductType(int productTypeId)
         {
             try
             {
-                _logger.LogInformation("Récupération des produits de la catégorie: {Category}", category);
-                var products = await _productService.GetProductsByCategoryAsync(category);
+                _logger.LogInformation("Récupération des produits par type: {ProductTypeId}", productTypeId);
+                var products = await _productService.GetProductsByProductTypeAsync(productTypeId);
 
-                _logger.LogInformation("{ProductCount} produits trouvés dans la catégorie {Category}", products.Count(), category);
+                _logger.LogInformation("{ProductCount} produits trouvés pour le type {ProductTypeId}", products.Count(), productTypeId);
                 return Ok(products);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur lors de la récupération des produits de la catégorie: {Category}", category);
+                _logger.LogError(ex, "Erreur lors de la récupération des produits par type: {ProductTypeId}", productTypeId);
                 return StatusCode(500, "Erreur interne du serveur");
             }
         }
@@ -259,19 +225,17 @@ namespace ERP.API.Controllers
         /// <summary>
         /// Récupère les produits par marque
         /// </summary>
-        /// <param name="brand">Nom de la marque</param>
-        /// <returns>Liste des produits de la marque</returns>
-        [HttpGet("brand/{brand}")]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsByBrand(string brand)
+        [HttpGet("brand/{brandId}")]
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsByBrand(int brandId)
         {
             try
             {
-                var products = await _productService.GetProductsByBrandAsync(brand);
+                var products = await _productService.GetProductsByBrandAsync(brandId);
                 return Ok(products);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur lors de la récupération des produits de la marque: {Brand}", brand);
+                _logger.LogError(ex, "Erreur lors de la récupération des produits de la marque: {BrandId}", brandId);
                 return StatusCode(500, "Erreur interne du serveur");
             }
         }
@@ -279,8 +243,6 @@ namespace ERP.API.Controllers
         /// <summary>
         /// Récupère les produits par fournisseur
         /// </summary>
-        /// <param name="supplier">Nom du fournisseur</param>
-        /// <returns>Liste des produits du fournisseur</returns>
         [HttpGet("supplier/{supplier}")]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsBySupplier(string supplier)
         {
@@ -299,8 +261,6 @@ namespace ERP.API.Controllers
         /// <summary>
         /// Récupère les produits par lot d'importation
         /// </summary>
-        /// <param name="batch">Numéro de lot</param>
-        /// <returns>Liste des produits du lot</returns>
         [HttpGet("batch/{batch}")]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsByBatch(string batch)
         {
@@ -316,164 +276,35 @@ namespace ERP.API.Controllers
             }
         }
 
-        // ✅ ================= ENDPOINTS DE GESTION DU STOCK =================
+        // ✅ ================= ENDPOINTS POUR DROPDOWNS =================
 
         /// <summary>
-        /// Récupère les produits en stock faible
+        /// Récupère les types de produits pour dropdown
         /// </summary>
-        /// <param name="threshold">Seuil de stock minimum (défaut: 10)</param>
-        /// <returns>Liste des produits en stock faible</returns>
-        [HttpGet("low-stock")]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> GetLowStockProducts([FromQuery] int threshold = 10)
+        [HttpGet("dropdowns/product-types")]
+        public async Task<ActionResult<IEnumerable<DropdownOptionDto>>> GetProductTypesForDropdown()
         {
             try
             {
-                var products = await _productService.GetLowStockProductsAsync(threshold);
-                return Ok(products);
+                var productTypes = await _productService.GetProductTypesForDropdownAsync();
+                return Ok(productTypes);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur lors de la récupération des produits en stock faible");
+                _logger.LogError(ex, "Erreur lors de la récupération des types de produits");
                 return StatusCode(500, "Erreur interne du serveur");
             }
         }
 
         /// <summary>
-        /// Met à jour le stock d'un produit
+        /// Récupère les marques pour dropdown
         /// </summary>
-        /// <param name="id">ID du produit</param>
-        /// <param name="newStock">Nouveau niveau de stock</param>
-        /// <returns>Confirmation de mise à jour</returns>
-        [HttpPatch("{id}/stock")]
-        public async Task<IActionResult> UpdateStock(int id, [FromQuery] int newStock)
+        [HttpGet("dropdowns/brands")]
+        public async Task<ActionResult<IEnumerable<BrandDropdownDto>>> GetBrandsForDropdown([FromQuery] int? productTypeId = null)
         {
             try
             {
-                var result = await _productService.UpdateStockAsync(id, newStock);
-                if (!result) return NotFound($"Produit avec l'ID {id} non trouvé");
-
-                return Ok($"Stock du produit {id} mis à jour à {newStock}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la mise à jour du stock du produit {ProductId}", id);
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        /// <summary>
-        /// Ajuste le stock d'un produit (+/-)
-        /// </summary>
-        /// <param name="id">ID du produit</param>
-        /// <param name="adjustment">Ajustement (+5 ou -3)</param>
-        /// <returns>Confirmation d'ajustement</returns>
-        [HttpPatch("{id}/adjust-stock")]
-        public async Task<IActionResult> AdjustStock(int id, [FromQuery] int adjustment)
-        {
-            try
-            {
-                var result = await _productService.AdjustStockAsync(id, adjustment);
-                if (!result) return NotFound($"Produit avec l'ID {id} non trouvé");
-
-                return Ok($"Stock du produit {id} ajusté de {adjustment}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de l'ajustement du stock du produit {ProductId}", id);
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        // ✅ ================= ENDPOINTS DE STATISTIQUES =================
-
-        /// <summary>
-        /// Récupère les statistiques générales des produits
-        /// </summary>
-        /// <returns>Statistiques complètes</returns>
-        [HttpGet("stats")]
-        public async Task<ActionResult<ProductStatsDto>> GetProductStats()
-        {
-            try
-            {
-                var stats = await _productService.GetProductStatsAsync();
-                return Ok(stats);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la récupération des statistiques");
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        /// <summary>
-        /// Récupère les statistiques par catégorie
-        /// </summary>
-        /// <returns>Statistiques par catégorie</returns>
-        [HttpGet("stats/categories")]
-        public async Task<ActionResult<IEnumerable<CategoryStatsDto>>> GetCategoryStats()
-        {
-            try
-            {
-                var stats = await _productService.GetCategoryStatsAsync();
-                return Ok(stats);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la récupération des statistiques par catégorie");
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        /// <summary>
-        /// Récupère les statistiques par fournisseur
-        /// </summary>
-        /// <returns>Statistiques par fournisseur</returns>
-        [HttpGet("stats/suppliers")]
-        public async Task<ActionResult<IEnumerable<SupplierStatsDto>>> GetSupplierStats()
-        {
-            try
-            {
-                var stats = await _productService.GetSupplierStatsAsync();
-                return Ok(stats);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la récupération des statistiques par fournisseur");
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        // ✅ ================= ENDPOINTS UTILITAIRES =================
-
-        /// <summary>
-        /// Récupère toutes les catégories disponibles
-        /// </summary>
-        /// <returns>Liste des catégories</returns>
-        [HttpGet("categories")]
-        public async Task<ActionResult<IEnumerable<string>>> GetCategories()
-        {
-            try
-            {
-                var categories = await _productService.GetCategoriesAsync();
-                return Ok(categories);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la récupération des catégories");
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        /// <summary>
-        /// Récupère toutes les marques disponibles
-        /// </summary>
-        /// <returns>Liste des marques</returns>
-        [HttpGet("brands")]
-        public async Task<ActionResult<IEnumerable<string>>> GetBrands()
-        {
-            try
-            {
-                var brands = await _productService.GetBrandsAsync();
+                var brands = await _productService.GetBrandsForDropdownAsync(productTypeId);
                 return Ok(brands);
             }
             catch (Exception ex)
@@ -484,172 +315,55 @@ namespace ERP.API.Controllers
         }
 
         /// <summary>
-        /// Récupère tous les fournisseurs disponibles
+        /// Récupère les modèles pour dropdown
         /// </summary>
-        /// <returns>Liste des fournisseurs</returns>
-        [HttpGet("suppliers")]
-        public async Task<ActionResult<IEnumerable<string>>> GetSuppliers()
+        [HttpGet("dropdowns/models")]
+        public async Task<ActionResult<IEnumerable<ModelDropdownDto>>> GetModelsForDropdown([FromQuery] int? productTypeId = null, [FromQuery] int? brandId = null)
         {
             try
             {
-                var suppliers = await _productService.GetSuppliersAsync();
-                return Ok(suppliers);
+                var models = await _productService.GetModelsForDropdownAsync(productTypeId, brandId);
+                return Ok(models);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur lors de la récupération des fournisseurs");
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        // ✅ ================= ENDPOINTS SPÉCIFIQUES IMPORT ITALIE =================
-
-        /// <summary>
-        /// Récupère les produits par ville de fournisseur
-        /// </summary>
-        /// <param name="city">Ville du fournisseur</param>
-        /// <returns>Liste des produits de la ville</returns>
-        [HttpGet("supplier-city/{city}")]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsBySupplierCity(string city)
-        {
-            try
-            {
-                var products = await _productService.GetProductsBySupplierCityAsync(city);
-                return Ok(products);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la récupération des produits de la ville: {City}", city);
+                _logger.LogError(ex, "Erreur lors de la récupération des modèles");
                 return StatusCode(500, "Erreur interne du serveur");
             }
         }
 
         /// <summary>
-        /// Récupère les arrivées récentes
+        /// Récupère les couleurs pour dropdown
         /// </summary>
-        /// <param name="days">Nombre de jours (défaut: 30)</param>
-        /// <returns>Liste des produits arrivés récemment</returns>
-        [HttpGet("recent-arrivals")]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> GetRecentArrivals([FromQuery] int days = 30)
+        [HttpGet("dropdowns/colors")]
+        public async Task<ActionResult<IEnumerable<ColorDropdownDto>>> GetColorsForDropdown()
         {
             try
             {
-                var products = await _productService.GetRecentArrivalsAsync(days);
-                return Ok(products);
+                var colors = await _productService.GetColorsForDropdownAsync();
+                return Ok(colors);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur lors de la récupération des arrivées récentes");
+                _logger.LogError(ex, "Erreur lors de la récupération des couleurs");
                 return StatusCode(500, "Erreur interne du serveur");
             }
         }
 
         /// <summary>
-        /// Marque un produit comme vendu
+        /// Récupère les conditions pour dropdown
         /// </summary>
-        /// <param name="id">ID du produit</param>
-        /// <returns>Confirmation</returns>
-        [HttpPatch("{id}/mark-sold")]
-        public async Task<IActionResult> MarkProductAsSold(int id)
+        [HttpGet("dropdowns/conditions")]
+        public async Task<ActionResult<IEnumerable<ConditionDropdownDto>>> GetConditionsForDropdown()
         {
             try
             {
-                var result = await _productService.MarkProductAsSoldAsync(id);
-                if (!result) return NotFound($"Produit avec l'ID {id} non trouvé");
-
-                return Ok($"Produit {id} marqué comme vendu");
+                var conditions = await _productService.GetConditionsForDropdownAsync();
+                return Ok(conditions);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur lors du marquage comme vendu du produit {ProductId}", id);
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        /// <summary>
-        /// Marque un produit comme réservé
-        /// </summary>
-        /// <param name="id">ID du produit</param>
-        /// <returns>Confirmation</returns>
-        [HttpPatch("{id}/mark-reserved")]
-        public async Task<IActionResult> MarkProductAsReserved(int id)
-        {
-            try
-            {
-                var result = await _productService.MarkProductAsReservedAsync(id);
-                if (!result) return NotFound($"Produit avec l'ID {id} non trouvé");
-
-                return Ok($"Produit {id} marqué comme réservé");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors du marquage comme réservé du produit {ProductId}", id);
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        /// <summary>
-        /// Marque un produit comme disponible
-        /// </summary>
-        /// <param name="id">ID du produit</param>
-        /// <returns>Confirmation</returns>
-        [HttpPatch("{id}/mark-available")]
-        public async Task<IActionResult> MarkProductAsAvailable(int id)
-        {
-            try
-            {
-                var result = await _productService.MarkProductAsAvailableAsync(id);
-                if (!result) return NotFound($"Produit avec l'ID {id} non trouvé");
-
-                return Ok($"Produit {id} marqué comme disponible");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors du marquage comme disponible du produit {ProductId}", id);
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        // ✅ ================= ENDPOINTS DE GESTION DES PRIX =================
-
-        /// <summary>
-        /// Met à jour le prix de vente d'un produit
-        /// </summary>
-        /// <param name="id">ID du produit</param>
-        /// <param name="newPrice">Nouveau prix de vente</param>
-        /// <returns>Confirmation</returns>
-        [HttpPatch("{id}/price")]
-        public async Task<IActionResult> UpdateSellingPrice(int id, [FromQuery] decimal newPrice)
-        {
-            try
-            {
-                var result = await _productService.UpdateSellingPriceAsync(id, newPrice);
-                if (!result) return NotFound($"Produit avec l'ID {id} non trouvé");
-
-                return Ok($"Prix du produit {id} mis à jour à {newPrice:C}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la mise à jour du prix du produit {ProductId}", id);
-                return StatusCode(500, "Erreur interne du serveur");
-            }
-        }
-
-        /// <summary>
-        /// Récupère le nombre total de produits
-        /// </summary>
-        /// <returns>Nombre de produits</returns>
-        [HttpGet("count")]
-        public async Task<ActionResult<int>> GetProductCount()
-        {
-            try
-            {
-                var count = await _productService.GetProductCountAsync();
-                return Ok(count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors du comptage des produits");
+                _logger.LogError(ex, "Erreur lors de la récupération des conditions");
                 return StatusCode(500, "Erreur interne du serveur");
             }
         }

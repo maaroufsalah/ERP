@@ -85,7 +85,7 @@ namespace ERP.Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
-                    b.Property<bool>("FlagDelete")
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
                     b.Property<string>("ImageUrl")
@@ -204,7 +204,7 @@ namespace ERP.Infrastructure.Migrations
 
                     b.HasIndex("Category");
 
-                    b.HasIndex("FlagDelete");
+                    b.HasIndex("IsDeleted");
 
                     b.HasIndex("ImportBatch");
 

@@ -103,7 +103,7 @@ namespace ERP.Infrastructure.Migrations
                     UpdatedBy = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedBy = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    FlagDelete = table.Column<bool>(type: "boolean", nullable: false)
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -274,9 +274,9 @@ namespace ERP.Infrastructure.Migrations
                 columns: new[] { "Category", "Status" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Products_FlagDelete",
+                name: "IX_Products_IsDeleted",
                 table: "Products",
-                column: "FlagDelete");
+                column: "IsDeleted");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_ImportBatch",

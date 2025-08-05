@@ -70,7 +70,7 @@ namespace ERP.Application.Mappings
                 .ForMember(dest => dest.UpdatedBy, opt => opt.Ignore())
                 .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
-                .ForMember(dest => dest.FlagDelete, opt => opt.MapFrom(src => false));
+                .ForMember(dest => dest.IsDeleted, opt => opt.MapFrom(src => false));
 
             // ✅ UpdateProductDto -> Product
             CreateMap<UpdateProductDto, Product>()
@@ -93,7 +93,7 @@ namespace ERP.Application.Mappings
                 .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
                 .ForMember(dest => dest.DeletedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.DeletedBy, opt => opt.Ignore())
-                .ForMember(dest => dest.FlagDelete, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
                 // Ignorer les valeurs nulles lors de la mise à jour
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 

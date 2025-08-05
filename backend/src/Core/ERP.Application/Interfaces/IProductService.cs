@@ -4,64 +4,144 @@ namespace ERP.Application.Interfaces.IServices
 {
     public interface IProductService
     {
-        // ✅ Méthodes CRUD de base
+        // ================================================================
+        // MÉTHODES CRUD DE BASE
+        // ================================================================
         Task<IEnumerable<ProductDto>> GetAllProductsAsync();
         Task<ProductDto?> GetProductByIdAsync(int id);
         Task<ProductDto> CreateProductAsync(CreateProductDto createProductDto);
         Task<ProductDto?> UpdateProductAsync(int id, UpdateProductDto updateProductDto);
         Task<bool> DeleteProductAsync(int id);
 
-        // ✅ Méthodes de recherche et filtrage
+        // ================================================================
+        // MÉTHODES DE RECHERCHE ET FILTRAGE AVEC NOUVELLES RELATIONS
+        // ================================================================
+        Task<PagedResultDto<ProductForListDto>> GetProductsPagedAsync(ProductFilterDto filter);
         Task<IEnumerable<ProductDto>> SearchProductsAsync(string query);
-        Task<IEnumerable<ProductDto>> GetProductsByCategoryAsync(string category);
+
+        // Recherche par nouvelles relations (IDs)
+        Task<IEnumerable<ProductDto>> GetProductsByProductTypeAsync(int productTypeId);
+        Task<IEnumerable<ProductDto>> GetProductsByBrandAsync(int brandId);
+        Task<IEnumerable<ProductDto>> GetProductsByModelAsync(int modelId);
+        Task<IEnumerable<ProductDto>> GetProductsByColorAsync(int colorId);
+        Task<IEnumerable<ProductDto>> GetProductsByConditionAsync(int conditionId);
+
+        // Recherche par autres critères
         Task<IEnumerable<ProductDto>> GetProductsBySupplierAsync(string supplierName);
         Task<IEnumerable<ProductDto>> GetProductsByBatchAsync(string importBatch);
-        Task<IEnumerable<ProductDto>> GetProductsByBrandAsync(string brand);
-        Task<IEnumerable<ProductDto>> GetProductsByConditionAsync(string condition);
         Task<IEnumerable<ProductDto>> GetProductsByStatusAsync(string status);
 
-        // ✅ Méthodes de gestion du stock
-        Task<IEnumerable<ProductDto>> GetLowStockProductsAsync(int threshold = 10);
+        // ================================================================
+        // MÉTHODES DE GESTION DU STOCK
+        // ================================================================
+        Task<IEnumerable<ProductDto>> GetLowStockProductsAsync(int? threshold = null);
         Task<bool> UpdateStockAsync(int productId, int newStock);
-        Task<bool> AdjustStockAsync(int productId, int adjustment); // +5 ou -3 par exemple
+        Task<bool> AdjustStockAsync(int productId, int adjustment);
+        Task<BulkOperationResultDto> BulkUpdateStockAsync(List<int> productIds, int stockAdjustment);
 
-        // ✅ Méthodes utilitaires
-        Task<IEnumerable<string>> GetCategoriesAsync();
-        Task<IEnumerable<string>> GetBrandsAsync();
-        Task<IEnumerable<string>> GetSuppliersAsync();
-        Task<IEnumerable<string>> GetImportBatchesAsync();
-        Task<bool> ProductExistsAsync(int id);
-        Task<int> GetProductCountAsync();
+        // ================================================================
+        // MÉTHODES POUR LES DROPDOWNS EN CASCADE
+        // ================================================================
+        Task<IEnumerable<DropdownOptionDto>> GetProductTypesForDropdownAsync();
+        Task<IEnumerable<BrandDropdownDto>> GetBrandsForDropdownAsync(int? productTypeId = null);
+        Task<IEnumerable<ModelDropdownDto>> GetModelsForDropdownAsync(int? productTypeId = null, int? brandId = null);
+        Task<IEnumerable<ColorDropdownDto>> GetColorsForDropdownAsync();
+        Task<IEnumerable<ConditionDropdownDto>> GetConditionsForDropdownAsync();
 
-        // ✅ Méthodes pour les listes (version allégée)
+        // ================================================================
+        // MÉTHODES POUR LES LISTES OPTIMISÉES
+        // ================================================================
         Task<IEnumerable<ProductForListDto>> GetProductsForListAsync();
-        Task<IEnumerable<ProductForListDto>> GetProductsForListByCategoryAsync(string category);
+        Task<IEnumerable<ProductForListDto>> GetProductsForListByTypeAsync(int productTypeId);
+        Task<IEnumerable<ProductForListDto>> GetProductsForListByBrandAsync(int brandId);
 
-        // ✅ Méthodes de statistiques et rapports
+        // ================================================================
+        // MÉTHODES DE STATISTIQUES ET RAPPORTS
+        // ================================================================
         Task<ProductStatsDto> GetProductStatsAsync();
-        Task<IEnumerable<CategoryStatsDto>> GetCategoryStatsAsync();
-        Task<IEnumerable<SupplierStatsDto>> GetSupplierStatsAsync();
+        Task<IEnumerable<ProductTypeStatsDto>> GetProductTypeStatsAsync();
+        Task<IEnumerable<BrandStatsDto>> GetBrandStatsAsync();
         Task<decimal> GetTotalStockValueAsync();
         Task<decimal> GetTotalMarginAsync();
         Task<decimal> GetAverageMarginPercentageAsync();
 
-        // ✅ Méthodes de filtrage avancé
-        Task<IEnumerable<ProductDto>> GetProductsByPriceRangeAsync(decimal minPrice, decimal maxPrice);
-        Task<IEnumerable<ProductDto>> GetProductsByDateRangeAsync(DateTime fromDate, DateTime toDate);
-        Task<IEnumerable<ProductDto>> GetRecentArrivalsAsync(int days = 30);
-        Task<IEnumerable<ProductDto>> GetProductsNeedingAttentionAsync(); // Stock faible + anciens
+        // ================================================================
+        // MÉTHODES UTILITAIRES
+        // ================================================================
+        Task<bool> ProductExistsAsync(int id);
+        Task<int> GetProductCountAsync();
+        Task<int> GetProductCountByTypeAsync(int productTypeId);
+        Task<int> GetProductCountByBrandAsync(int brandId);
 
-        // ✅ Méthodes de gestion des prix et marges
-        Task<bool> UpdateSellingPriceAsync(int productId, decimal newPrice);
-        Task<bool> UpdateMarginPercentageAsync(int productId, decimal targetMarginPercentage);
-        Task<IEnumerable<ProductDto>> GetProductsByMarginRangeAsync(decimal minMargin, decimal maxMargin);
+        // ================================================================
+        // MÉTHODES DE VALIDATION DES RELATIONS
+        // ================================================================
+        Task<bool> ValidateProductRelationsAsync(int productTypeId, int brandId, int modelId, int colorId, int conditionId);
+        Task<bool> IsValidBrandForProductTypeAsync(int brandId, int productTypeId);
+        Task<bool> IsValidModelForBrandAsync(int modelId, int brandId);
 
-        // ✅ Méthodes spécifiques à l'import d'Italie
-        Task<IEnumerable<ProductDto>> GetProductsBySupplierCityAsync(string city);
-        Task<IEnumerable<ProductDto>> GetProductsByArrivalDateAsync(DateTime date);
-        Task<IEnumerable<ProductDto>> GetProductsByInvoiceNumberAsync(string invoiceNumber);
-        Task<bool> MarkProductAsSoldAsync(int productId);
-        Task<bool> MarkProductAsReservedAsync(int productId);
-        Task<bool> MarkProductAsAvailableAsync(int productId);
+        // ================================================================
+        // MÉTHODES D'OPÉRATIONS EN LOT
+        // ================================================================
+        Task<BulkOperationResultDto> BulkUpdatePricesAsync(List<int> productIds, decimal priceAdjustmentPercentage);
+        Task<BulkOperationResultDto> BulkUpdateStatusAsync(List<int> productIds, string newStatus);
+        Task<BulkOperationResultDto> BulkDeleteAsync(List<int> productIds);
+    }
+
+    // ================================================================
+    // INTERFACES POUR LES SERVICES DES TABLES DE RÉFÉRENCE
+    // ================================================================
+
+    public interface IProductTypeService
+    {
+        Task<IEnumerable<ProductTypeDto>> GetAllProductTypesAsync();
+        Task<ProductTypeDto?> GetProductTypeByIdAsync(int id);
+        Task<ProductTypeDto> CreateProductTypeAsync(ProductTypeDto productTypeDto);
+        Task<ProductTypeDto?> UpdateProductTypeAsync(int id, ProductTypeDto productTypeDto);
+        Task<bool> DeleteProductTypeAsync(int id);
+        Task<IEnumerable<DropdownOptionDto>> GetProductTypesForDropdownAsync();
+    }
+
+    public interface IBrandService
+    {
+        Task<IEnumerable<BrandDto>> GetAllBrandsAsync();
+        Task<IEnumerable<BrandDto>> GetBrandsByProductTypeAsync(int productTypeId);
+        Task<BrandDto?> GetBrandByIdAsync(int id);
+        Task<BrandDto> CreateBrandAsync(BrandDto brandDto);
+        Task<BrandDto?> UpdateBrandAsync(int id, BrandDto brandDto);
+        Task<bool> DeleteBrandAsync(int id);
+        Task<IEnumerable<BrandDropdownDto>> GetBrandsForDropdownAsync(int? productTypeId = null);
+    }
+
+    public interface IModelService
+    {
+        Task<IEnumerable<ModelDto>> GetAllModelsAsync();
+        Task<IEnumerable<ModelDto>> GetModelsByBrandAsync(int brandId);
+        Task<IEnumerable<ModelDto>> GetModelsByProductTypeAsync(int productTypeId);
+        Task<ModelDto?> GetModelByIdAsync(int id);
+        Task<ModelDto> CreateModelAsync(ModelDto modelDto);
+        Task<ModelDto?> UpdateModelAsync(int id, ModelDto modelDto);
+        Task<bool> DeleteModelAsync(int id);
+        Task<IEnumerable<ModelDropdownDto>> GetModelsForDropdownAsync(int? productTypeId = null, int? brandId = null);
+    }
+
+    public interface IColorService
+    {
+        Task<IEnumerable<ColorDto>> GetAllColorsAsync();
+        Task<ColorDto?> GetColorByIdAsync(int id);
+        Task<ColorDto> CreateColorAsync(ColorDto colorDto);
+        Task<ColorDto?> UpdateColorAsync(int id, ColorDto colorDto);
+        Task<bool> DeleteColorAsync(int id);
+        Task<IEnumerable<ColorDropdownDto>> GetColorsForDropdownAsync();
+    }
+
+    public interface IConditionService
+    {
+        Task<IEnumerable<ConditionDto>> GetAllConditionsAsync();
+        Task<ConditionDto?> GetConditionByIdAsync(int id);
+        Task<ConditionDto> CreateConditionAsync(ConditionDto conditionDto);
+        Task<ConditionDto?> UpdateConditionAsync(int id, ConditionDto conditionDto);
+        Task<bool> DeleteConditionAsync(int id);
+        Task<IEnumerable<ConditionDropdownDto>> GetConditionsForDropdownAsync();
     }
 }
