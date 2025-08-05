@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ERP.Infrastructure.Migrations
 {
     [DbContext(typeof(ErpDbContext))]
-    [Migration("20250805001641_UpdateProductStructureMigration")]
-    partial class UpdateProductStructureMigration
+    [Migration("20250805002444_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

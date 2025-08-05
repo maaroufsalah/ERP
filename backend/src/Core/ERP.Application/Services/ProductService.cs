@@ -52,7 +52,7 @@ namespace ERP.Application.Services
 
                 // Récupérer les produits avec toutes leurs relations
                 var products = await _productRepository.GetWithFilterAndIncludesAsync(
-                    filter: p => !p.IsDeleted && p.IsActive,
+                    filter: p => !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
@@ -234,7 +234,7 @@ namespace ERP.Application.Services
                 _logger.LogInformation("Récupération des produits par type: {ProductTypeId}", productTypeId);
 
                 var products = await _productRepository.GetWithFilterAndIncludesAsync(
-                    filter: p => p.ProductTypeId == productTypeId && !p.IsDeleted && p.IsActive,
+                    filter: p => p.ProductTypeId == productTypeId && !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
@@ -530,7 +530,7 @@ namespace ERP.Application.Services
                                   p.ProductType.Name.Contains(query) ||
                                   p.Brand.Name.Contains(query) ||
                                   p.Model.Name.Contains(query)) &&
-                                 !p.IsDeleted && p.IsActive,
+                                 !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
@@ -565,7 +565,7 @@ namespace ERP.Application.Services
         {
             try
             {
-                return await _productRepository.CountWithFilterAsync(p => !p.IsDeleted && p.IsActive);
+                return await _productRepository.CountWithFilterAsync(p => !p.IsDeleted);
             }
             catch (Exception ex)
             {
@@ -578,7 +578,7 @@ namespace ERP.Application.Services
         {
             try
             {
-                return await _productRepository.CountWithFilterAsync(p => p.ProductTypeId == productTypeId && !p.IsDeleted && p.IsActive);
+                return await _productRepository.CountWithFilterAsync(p => p.ProductTypeId == productTypeId && !p.IsDeleted);
             }
             catch (Exception ex)
             {
@@ -591,7 +591,7 @@ namespace ERP.Application.Services
         {
             try
             {
-                return await _productRepository.CountWithFilterAsync(p => p.BrandId == brandId && !p.IsDeleted && p.IsActive);
+                return await _productRepository.CountWithFilterAsync(p => p.BrandId == brandId && !p.IsDeleted);
             }
             catch (Exception ex)
             {
@@ -611,7 +611,7 @@ namespace ERP.Application.Services
                 _logger.LogInformation("Récupération paginée des produits");
 
                 // Construire le filtre
-                Expression<Func<Product, bool>> predicate = p => !p.IsDeleted && p.IsActive;
+                Expression<Func<Product, bool>> predicate = p => !p.IsDeleted;
 
                 if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
                 {

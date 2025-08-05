@@ -144,16 +144,16 @@ try
     app.UseCors("AllowFrontend");
 
     // ✅ Initialize database with migrations and seed data
-    try
-    {
-        await app.InitializeDatabaseAsync();
-        Log.Information("✅ Database initialized successfully");
-    }
-    catch (Exception ex)
-    {
-        Log.Fatal(ex, "❌ Error occurred while initializing database");
-        throw;
-    }
+    //try
+    //{
+    //    await app.InitializeDatabaseAsync();
+    //    Log.Information("✅ Database initialized successfully");
+    //}
+    //catch (Exception ex)
+    //{
+    //    Log.Fatal(ex, "❌ Error occurred while initializing database");
+    //    throw;
+    //}
 
     // ✅ Configure Swagger pour tous les environnements (dev ET production)
     app.UseSwagger(c =>

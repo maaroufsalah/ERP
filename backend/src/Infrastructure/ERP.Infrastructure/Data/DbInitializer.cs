@@ -91,6 +91,7 @@ namespace ERP.Infrastructure.Data
                     SortOrder = 1,
                     IconUrl = "📱",
                     CategoryColor = "#007AFF",
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = "System"
                 },
                 new ProductType
@@ -100,6 +101,7 @@ namespace ERP.Infrastructure.Data
                     SortOrder = 2,
                     IconUrl = "💻",
                     CategoryColor = "#34C759",
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = "System"
                 },
                 new ProductType
@@ -109,6 +111,7 @@ namespace ERP.Infrastructure.Data
                     SortOrder = 3,
                     IconUrl = "📔",
                     CategoryColor = "#FF9500",
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = "System"
                 },
                 new ProductType
@@ -118,6 +121,7 @@ namespace ERP.Infrastructure.Data
                     SortOrder = 4,
                     IconUrl = "📸",
                     CategoryColor = "#FF3B30",
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = "System"
                 },
                 new ProductType
@@ -127,6 +131,7 @@ namespace ERP.Infrastructure.Data
                     SortOrder = 5,
                     IconUrl = "🔌",
                     CategoryColor = "#8E8E93",
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = "System"
                 }
             };
@@ -147,20 +152,20 @@ namespace ERP.Infrastructure.Data
 
             var colors = new[]
             {
-                new Color { Name = "Noir", HexCode = "#000000", SortOrder = 1, CreatedBy = "System" },
-                new Color { Name = "Blanc", HexCode = "#FFFFFF", SortOrder = 2, CreatedBy = "System" },
-                new Color { Name = "Gris", HexCode = "#808080", SortOrder = 3, CreatedBy = "System" },
-                new Color { Name = "Gris Sidéral", HexCode = "#666666", SortOrder = 4, CreatedBy = "System" },
-                new Color { Name = "Bleu", HexCode = "#0066CC", SortOrder = 5, CreatedBy = "System" },
-                new Color { Name = "Bleu Titane", HexCode = "#4A90E2", SortOrder = 6, CreatedBy = "System" },
-                new Color { Name = "Rouge", HexCode = "#FF0000", SortOrder = 7, CreatedBy = "System" },
-                new Color { Name = "Rose", HexCode = "#FFB6C1", SortOrder = 8, CreatedBy = "System" },
-                new Color { Name = "Violet", HexCode = "#8A2BE2", SortOrder = 9, CreatedBy = "System" },
-                new Color { Name = "Vert", HexCode = "#00FF00", SortOrder = 10, CreatedBy = "System" },
-                new Color { Name = "Jaune", HexCode = "#FFFF00", SortOrder = 11, CreatedBy = "System" },
-                new Color { Name = "Or", HexCode = "#FFD700", SortOrder = 12, CreatedBy = "System" },
-                new Color { Name = "Argent", HexCode = "#C0C0C0", SortOrder = 13, CreatedBy = "System" },
-                new Color { Name = "Platine", HexCode = "#E5E4E2", SortOrder = 14, CreatedBy = "System" }
+                new Color { Name = "Noir", HexCode = "#000000", SortOrder = 1,CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Color { Name = "Blanc", HexCode = "#FFFFFF", SortOrder = 2,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Color { Name = "Gris", HexCode = "#808080", SortOrder = 3,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Color { Name = "Gris Sidéral", HexCode = "#666666", SortOrder = 4,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Color { Name = "Bleu", HexCode = "#0066CC", SortOrder = 5, CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Color { Name = "Bleu Titane", HexCode = "#4A90E2", SortOrder = 6, CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Color { Name = "Rouge", HexCode = "#FF0000", SortOrder = 7, CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Color { Name = "Rose", HexCode = "#FFB6C1", SortOrder = 8, CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Color { Name = "Violet", HexCode = "#8A2BE2", SortOrder = 9, CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Color { Name = "Vert", HexCode = "#00FF00", SortOrder = 10, CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Color { Name = "Jaune", HexCode = "#FFFF00", SortOrder = 11, CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Color { Name = "Or", HexCode = "#FFD700", SortOrder = 12, CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Color { Name = "Argent", HexCode = "#C0C0C0", SortOrder = 13, CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Color { Name = "Platine", HexCode = "#E5E4E2", SortOrder = 14, CreatedAt = DateTime.UtcNow, CreatedBy = "System" }
             };
 
             await context.Colors.AddRangeAsync(colors);
@@ -185,6 +190,7 @@ namespace ERP.Infrastructure.Data
                     Description = "Produit jamais utilisé, emballage d'origine intact, garantie constructeur complète",
                     QualityPercentage = 100,
                     SortOrder = 1,
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = "System"
                 },
                 new Condition
@@ -193,6 +199,7 @@ namespace ERP.Infrastructure.Data
                     Description = "Produit en parfait état de fonctionnement, aucune rayure visible, très peu utilisé",
                     QualityPercentage = 95,
                     SortOrder = 2,
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = "System"
                 },
                 new Condition
@@ -201,6 +208,7 @@ namespace ERP.Infrastructure.Data
                     Description = "Produit en très bon état, quelques micro-rayures invisibles à l'usage normal",
                     QualityPercentage = 90,
                     SortOrder = 3,
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = "System"
                 },
                 new Condition
@@ -209,6 +217,7 @@ namespace ERP.Infrastructure.Data
                     Description = "Produit en bon état avec quelques signes d'usage visibles mais n'affectant pas le fonctionnement",
                     QualityPercentage = 80,
                     SortOrder = 4,
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = "System"
                 },
                 new Condition
@@ -217,6 +226,7 @@ namespace ERP.Infrastructure.Data
                     Description = "Produit fonctionnel avec des signes d'usage importants, rayures ou marques visibles",
                     QualityPercentage = 70,
                     SortOrder = 5,
+                    CreatedAt = DateTime.UtcNow,
                     CreatedBy = "System"
                 }
             };
@@ -245,34 +255,34 @@ namespace ERP.Infrastructure.Data
             var brands = new[]
             {
                 // Smartphones
-                new Brand { Name = "Samsung", ProductTypeId = smartphoneType.Id, SortOrder = 1, CreatedBy = "System" },
-                new Brand { Name = "Apple", ProductTypeId = smartphoneType.Id, SortOrder = 2, CreatedBy = "System" },
-                new Brand { Name = "Xiaomi", ProductTypeId = smartphoneType.Id, SortOrder = 3, CreatedBy = "System" },
-                new Brand { Name = "OnePlus", ProductTypeId = smartphoneType.Id, SortOrder = 4, CreatedBy = "System" },
-                new Brand { Name = "Google", ProductTypeId = smartphoneType.Id, SortOrder = 5, CreatedBy = "System" },
+                new Brand { Name = "Samsung", ProductTypeId = smartphoneType.Id, SortOrder = 1,CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Brand { Name = "Apple", ProductTypeId = smartphoneType.Id, SortOrder = 2,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "Xiaomi", ProductTypeId = smartphoneType.Id, SortOrder = 3,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "OnePlus", ProductTypeId = smartphoneType.Id, SortOrder = 4,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "Google", ProductTypeId = smartphoneType.Id, SortOrder = 5,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
 
                 // Laptops
-                new Brand { Name = "Apple", ProductTypeId = laptopType.Id, SortOrder = 1, CreatedBy = "System" },
-                new Brand { Name = "Dell", ProductTypeId = laptopType.Id, SortOrder = 2, CreatedBy = "System" },
-                new Brand { Name = "HP", ProductTypeId = laptopType.Id, SortOrder = 3, CreatedBy = "System" },
-                new Brand { Name = "Lenovo", ProductTypeId = laptopType.Id, SortOrder = 4, CreatedBy = "System" },
-                new Brand { Name = "ASUS", ProductTypeId = laptopType.Id, SortOrder = 5, CreatedBy = "System" },
+                new Brand { Name = "Apple", ProductTypeId = laptopType.Id, SortOrder = 1,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "Dell", ProductTypeId = laptopType.Id, SortOrder = 2,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "HP", ProductTypeId = laptopType.Id, SortOrder = 3,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "Lenovo", ProductTypeId = laptopType.Id, SortOrder = 4,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "ASUS", ProductTypeId = laptopType.Id, SortOrder = 5,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
 
                 // Tablets
-                new Brand { Name = "Apple", ProductTypeId = tabletType.Id, SortOrder = 1, CreatedBy = "System" },
-                new Brand { Name = "Samsung", ProductTypeId = tabletType.Id, SortOrder = 2, CreatedBy = "System" },
-                new Brand { Name = "Microsoft", ProductTypeId = tabletType.Id, SortOrder = 3, CreatedBy = "System" },
+                new Brand { Name = "Apple", ProductTypeId = tabletType.Id, SortOrder = 1,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "Samsung", ProductTypeId = tabletType.Id, SortOrder = 2,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "Microsoft", ProductTypeId = tabletType.Id, SortOrder = 3,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
 
                 // Cameras
-                new Brand { Name = "Canon", ProductTypeId = cameraType.Id, SortOrder = 1, CreatedBy = "System" },
-                new Brand { Name = "Nikon", ProductTypeId = cameraType.Id, SortOrder = 2, CreatedBy = "System" },
-                new Brand { Name = "Sony", ProductTypeId = cameraType.Id, SortOrder = 3, CreatedBy = "System" },
-                new Brand { Name = "GoPro", ProductTypeId = cameraType.Id, SortOrder = 4, CreatedBy = "System" },
+                new Brand { Name = "Canon", ProductTypeId = cameraType.Id, SortOrder = 1,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "Nikon", ProductTypeId = cameraType.Id, SortOrder = 2,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "Sony", ProductTypeId = cameraType.Id, SortOrder = 3,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "GoPro", ProductTypeId = cameraType.Id, SortOrder = 4,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
 
                 // Accessoires
-                new Brand { Name = "Anker", ProductTypeId = accessoireType.Id, SortOrder = 1, CreatedBy = "System" },
-                new Brand { Name = "Belkin", ProductTypeId = accessoireType.Id, SortOrder = 2, CreatedBy = "System" },
-                new Brand { Name = "Logitech", ProductTypeId = accessoireType.Id, SortOrder = 3, CreatedBy = "System" }
+                new Brand { Name = "Anker", ProductTypeId = accessoireType.Id, SortOrder = 1,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "Belkin", ProductTypeId = accessoireType.Id, SortOrder = 2,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Brand { Name = "Logitech", ProductTypeId = accessoireType.Id, SortOrder = 3,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" }
             };
 
             await context.Brands.AddRangeAsync(brands);
@@ -304,28 +314,28 @@ namespace ERP.Infrastructure.Data
             var models = new[]
             {
                 // Samsung Smartphones
-                new Model { Name = "Galaxy S24 Ultra", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2024, SortOrder = 1, CreatedBy = "System" },
-                new Model { Name = "Galaxy S24", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2024, SortOrder = 2, CreatedBy = "System" },
-                new Model { Name = "Galaxy A55", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2024, SortOrder = 3, CreatedBy = "System" },
-                new Model { Name = "Galaxy A34", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2023, SortOrder = 4, CreatedBy = "System" },
+                new Model { Name = "Galaxy S24 Ultra", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2024, SortOrder = 1,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Model { Name = "Galaxy S24", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2024, SortOrder = 2,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Model { Name = "Galaxy A55", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2024, SortOrder = 3,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Model { Name = "Galaxy A34", ProductTypeId = smartphoneType.Id, BrandId = samsungSmartphone.Id, ReleaseYear = 2023, SortOrder = 4,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
 
                 // Apple Smartphones
-                new Model { Name = "iPhone 15 Pro Max", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2023, SortOrder = 1, CreatedBy = "System" },
-                new Model { Name = "iPhone 15 Pro", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2023, SortOrder = 2, CreatedBy = "System" },
-                new Model { Name = "iPhone 15", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2023, SortOrder = 3, CreatedBy = "System" },
-                new Model { Name = "iPhone 14", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2022, SortOrder = 4, CreatedBy = "System" },
+                new Model { Name = "iPhone 15 Pro Max", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2023, SortOrder = 1,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Model { Name = "iPhone 15 Pro", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2023, SortOrder = 2,CreatedAt = DateTime.UtcNow, CreatedBy = "System" },
+                new Model { Name = "iPhone 15", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2023, SortOrder = 3,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Model { Name = "iPhone 14", ProductTypeId = smartphoneType.Id, BrandId = appleSmartphone.Id, ReleaseYear = 2022, SortOrder = 4,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
 
                 // Apple Laptops
-                new Model { Name = "MacBook Air M2", ProductTypeId = laptopType.Id, BrandId = appleLaptop.Id, ReleaseYear = 2022, SortOrder = 1, CreatedBy = "System" },
-                new Model { Name = "MacBook Pro 14\"", ProductTypeId = laptopType.Id, BrandId = appleLaptop.Id, ReleaseYear = 2023, SortOrder = 2, CreatedBy = "System" },
+                new Model { Name = "MacBook Air M2", ProductTypeId = laptopType.Id, BrandId = appleLaptop.Id, ReleaseYear = 2022, SortOrder = 1,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Model { Name = "MacBook Pro 14\"", ProductTypeId = laptopType.Id, BrandId = appleLaptop.Id, ReleaseYear = 2023, SortOrder = 2,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
 
                 // Dell Laptops
-                new Model { Name = "XPS 13 Plus", ProductTypeId = laptopType.Id, BrandId = dellLaptop.Id, ReleaseYear = 2022, SortOrder = 1, CreatedBy = "System" },
-                new Model { Name = "Inspiron 15 3000", ProductTypeId = laptopType.Id, BrandId = dellLaptop.Id, ReleaseYear = 2023, SortOrder = 2, CreatedBy = "System" },
+                new Model { Name = "XPS 13 Plus", ProductTypeId = laptopType.Id, BrandId = dellLaptop.Id, ReleaseYear = 2022, SortOrder = 1,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Model { Name = "Inspiron 15 3000", ProductTypeId = laptopType.Id, BrandId = dellLaptop.Id, ReleaseYear = 2023, SortOrder = 2,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
 
                 // Apple Tablets
-                new Model { Name = "iPad Air 5", ProductTypeId = tabletType.Id, BrandId = appleTablet.Id, ReleaseYear = 2022, SortOrder = 1, CreatedBy = "System" },
-                new Model { Name = "iPad Pro 12.9\"", ProductTypeId = tabletType.Id, BrandId = appleTablet.Id, ReleaseYear = 2022, SortOrder = 2, CreatedBy = "System" }
+                new Model { Name = "iPad Air 5", ProductTypeId = tabletType.Id, BrandId = appleTablet.Id, ReleaseYear = 2022, SortOrder = 1,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" },
+                new Model { Name = "iPad Pro 12.9\"", ProductTypeId = tabletType.Id, BrandId = appleTablet.Id, ReleaseYear = 2022, SortOrder = 2,CreatedAt = DateTime.UtcNow,  CreatedBy = "System" }
             };
 
             await context.Models.AddRangeAsync(models);
