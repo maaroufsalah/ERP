@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { Product, CreateProductDto } from '../types';
 import { useProducts } from '../hooks/useProducts';
-import CreateProductModal from './CreateProductModal';
+import CreateProductModal from '../components/CreateProductModal/CreateProductModal';
 import { 
   Search, 
   Plus, 
@@ -33,13 +33,14 @@ export default function ProductTable() {
   } = useProducts();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedProductType, setSelectedProductType] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   
-  // ✅ AJOUT : État pour le modal de création
+  // État pour le modal de création
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // ✅ AJOUT : Chargement automatique des produits au montage du composant
+  // Chargement automatique des produits au montage du composant
   useEffect(() => {
     console.log('ProductTable mounted, loading products...');
     loadProducts();
@@ -48,16 +49,18 @@ export default function ProductTable() {
   // Statistiques rapides
   const stats = {
     total: products.length,
-    lowStock: products.filter(p => p.stock && p.stock < 10).length,
-    totalValue: products.reduce((sum, p) => sum + (p.sellingPrice * (p.stock || 0)), 0),
+    lowStock: products.filter(p => p.isLowStock).length,
+    totalValue: products.reduce((sum, p) => sum + (p.totalValue || 0), 0),
     averageMargin: products.length > 0 
       ? products.reduce((sum, p) => sum + (p.marginPercentage || 0), 0) / products.length 
       : 0
   };
 
-  const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+  // Extraction des types de produits et marques uniques pour les filtres
+  const productTypes = [...new Set(products.map(p => p.productType?.name).filter(Boolean))];
+  const brands = [...new Set(products.map(p => p.brand?.name).filter(Boolean))];
 
-  // ✅ AJOUT : Gestionnaire pour la création de produit
+  // Gestionnaire pour la création de produit
   const handleCreateProduct = async (productData: CreateProductDto) => {
     try {
       await createProduct(productData);
@@ -104,6 +107,7 @@ export default function ProductTable() {
       case 'available': return 'bg-green-100 text-green-800';
       case 'sold': return 'bg-gray-100 text-gray-800';
       case 'reserved': return 'bg-yellow-100 text-yellow-800';
+      case 'inactive': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -113,6 +117,7 @@ export default function ProductTable() {
       case 'available': return 'Disponible';
       case 'sold': return 'Vendu';
       case 'reserved': return 'Réservé';
+      case 'inactive': return 'Inactif';
       default: return status || 'Inconnu';
     }
   };
@@ -266,7 +271,7 @@ export default function ProductTable() {
               </button>
             </div>
 
-            {/* ✅ MODIFICATION : Bouton d'ajout connecté au modal */}
+            {/* Bouton d'ajout connecté au modal */}
             <button 
               onClick={() => setIsCreateModalOpen(true)}
               className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
@@ -281,27 +286,33 @@ export default function ProductTable() {
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  value={selectedProductType}
+                  onChange={(e) => setSelectedProductType(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Toutes les catégories</option>
-                  {categories.map(category => (
-                    <option key={category} value={category}>{category}</option>
+                  <option value="">Tous les types</option>
+                  {productTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
                   ))}
                 </select>
                 
+                <select
+                  value={selectedBrand}
+                  onChange={(e) => setSelectedBrand(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Toutes les marques</option>
+                  {brands.map(brand => (
+                    <option key={brand} value={brand}>{brand}</option>
+                  ))}
+                </select>
+
                 <select className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   <option value="">Tous les statuts</option>
                   <option value="Available">Disponible</option>
                   <option value="Sold">Vendu</option>
                   <option value="Reserved">Réservé</option>
-                </select>
-
-                <select className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                  <option value="">Tous les stocks</option>
-                  <option value="low">Stock faible</option>
-                  <option value="normal">Stock normal</option>
+                  <option value="Inactive">Inactif</option>
                 </select>
               </div>
             </div>
@@ -340,6 +351,20 @@ export default function ProductTable() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
+                          {product.imageUrl ? (
+                            <img 
+                              className="h-10 w-10 rounded-lg object-cover" 
+                              src={product.imageUrl} 
+                              alt={product.name}
+                              onError={(e) => {
+                                // Fallback en cas d'erreur de chargement d'image
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const fallback = target.nextElementSibling as HTMLDivElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
                           <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                             <Package className="h-5 w-5 text-white" />
                           </div>
@@ -349,10 +374,12 @@ export default function ProductTable() {
                             {product.name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {product.brand} - {product.model}
+                            {product.brand?.name} - {product.model?.name}
                           </div>
                           <div className="text-xs text-gray-400">
-                            {product.category}
+                            {product.productType?.name}
+                            {product.storage && ` • ${product.storage}`}
+                            {product.color?.name && ` • ${product.color.name}`}
                           </div>
                         </div>
                       </div>
@@ -373,11 +400,14 @@ export default function ProductTable() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         <div className="font-medium">{product.stock || 0} unités</div>
-                        {(product.stock || 0) < 10 && (
+                        {product.isLowStock && (
                           <div className="text-red-600 text-xs font-medium">
                             ⚠️ Stock faible
                           </div>
                         )}
+                        <div className="text-xs text-gray-500">
+                          Min: {product.minStockLevel || 0}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -385,11 +415,22 @@ export default function ProductTable() {
                       {product.supplierCity && (
                         <div className="text-gray-500 text-xs">{product.supplierCity}</div>
                       )}
+                      {product.arrivalDate && (
+                        <div className="text-gray-400 text-xs">
+                          Arrivé: {formatDate(product.arrivalDate)}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(product.status || 'available')}`}>
                         {getStatusText(product.status || 'available')}
                       </span>
+                      {product.condition?.name && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {product.condition.name}
+                          {product.condition.grade && ` (${product.condition.grade})`}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
@@ -463,7 +504,7 @@ export default function ProductTable() {
         )}
       </div>
 
-      {/* ✅ AJOUT : Modal de création */}
+      {/* Modal de création */}
       <CreateProductModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}

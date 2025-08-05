@@ -18,7 +18,7 @@ export function getApiUrl(): string {
 }
 
 export const API_ENDPOINTS = {
-  // Produits
+  // ✅ PRODUITS
   PRODUCTS: 'products',
   PRODUCTS_LIST: 'products/list',
   PRODUCTS_SEARCH: 'products/search',
@@ -27,7 +27,16 @@ export const API_ENDPOINTS = {
   PRODUCTS_BY_SUPPLIER: 'products/supplier',
   PRODUCTS_LOW_STOCK: 'products/low-stock',
   
-  // Autres endpoints futurs
+  // ✅ NOUVELLES RÉFÉRENCES
+  PRODUCT_TYPES: 'producttypes',
+  BRANDS: 'brands',
+  MODELS: 'models',
+  MODELS_BY_BRAND: 'models/brand',
+  COLORS: 'colors',
+  CONDITIONS: 'conditions',
+  
+  // ✅ ENDPOINTS FUTURS
   // ORDERS: 'orders',
   // CUSTOMERS: 'customers',
+  // SUPPLIERS: 'suppliers',
 } as const;

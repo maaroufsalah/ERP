@@ -4,9 +4,11 @@ export interface Product {
   id: number;
   name: string;
   description: string;
-  category: string;
-  brand: string;
-  model: string;
+  productTypeId: number;
+  brandId: number;
+  modelId: number;
+  colorId?: number;
+  conditionId: number;
   purchasePrice: number;
   transportCost: number;
   totalCostPrice: number;
@@ -15,10 +17,7 @@ export interface Product {
   marginPercentage: number;
   stock: number;
   minStockLevel: number;
-  condition: string;
-  conditionGrade: string;
   storage?: string;
-  color?: string;
   memory?: string;
   processor?: string;
   screenSize?: string;
@@ -42,30 +41,39 @@ export interface Product {
   totalValue: number;
   isLowStock: boolean;
   daysInStock: number;
+  
+  // Relations pour l'affichage
+  productType?: ProductType;
+  brand?: Brand;
+  model?: Model;
+  color?: Color;
+  condition?: Condition;
 }
 
 export interface CreateProductDto {
   name: string;
   description: string;
-  category: string;
-  brand: string;
-  model: string;
+  productTypeId: number;
+  brandId: number;
+  modelId: number;
+  colorId?: number;
+  conditionId: number;
   purchasePrice: number;
   transportCost: number;
   sellingPrice: number;
   stock: number;
   minStockLevel: number;
-  condition: string;
-  conditionGrade: string;
   storage?: string;
-  color?: string;
   memory?: string;
   processor?: string;
   screenSize?: string;
   supplierName: string;
   supplierCity: string;
+  purchaseDate: string;
+  arrivalDate: string;
   importBatch: string;
   invoiceNumber: string;
+  status: string;
   notes?: string;
   warrantyInfo?: string;
   imageUrl?: string;
@@ -75,35 +83,70 @@ export interface UpdateProductDto extends Partial<CreateProductDto> {
   id: number;
 }
 
+// ✅ NOUVELLES INTERFACES POUR LES RÉFÉRENCES
+
+export interface ProductType {
+  id: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
+}
+
+export interface Brand {
+  id: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
+}
+
+export interface Model {
+  id: number;
+  name: string;
+  brandId: number;
+  description?: string;
+  isActive: boolean;
+  brand?: Brand;
+}
+
+export interface Color {
+  id: number;
+  name: string;
+  hexCode?: string;
+  isActive: boolean;
+}
+
+export interface Condition {
+  id: number;
+  name: string;
+  description?: string;
+  grade?: string;
+  isActive: boolean;
+}
+
+// ✅ INTERFACES POUR LES DROPDOWNS
+export interface DropdownOption {
+  value: number;
+  label: string;
+  description?: string;
+  disabled?: boolean;
+}
+
 export interface ProductFilters {
   search?: string;
-  category?: string;
-  brand?: string;
+  productTypeId?: number;
+  brandId?: number;
+  modelId?: number;
+  colorId?: number;
+  conditionId?: number;
   lowStock?: boolean;
 }
 
-// Constantes pour les options
-export const PRODUCT_CATEGORIES = [
-  'Smartphones',
-  'Tablets', 
-  'Laptops',
-  'Accessories'
+// ✅ STATUS CONSTANTS (conservés)
+export const PRODUCT_STATUS = [
+  'Available',
+  'Reserved',
+  'Sold',
+  'Inactive'
 ] as const;
 
-export const PRODUCT_CONDITIONS = [
-  'Neuf',
-  'Reconditionné', 
-  'Occasion'
-] as const;
-
-export const CONDITION_GRADES = [
-  'A+',
-  'A',
-  'B+', 
-  'B',
-  'C'
-] as const;
-
-export type ProductCategory = typeof PRODUCT_CATEGORIES[number];
-export type ProductCondition = typeof PRODUCT_CONDITIONS[number];
-export type ConditionGrade = typeof CONDITION_GRADES[number];
+export type ProductStatus = typeof PRODUCT_STATUS[number];

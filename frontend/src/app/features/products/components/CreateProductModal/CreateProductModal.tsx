@@ -4,7 +4,9 @@
 
 import React, { useState } from 'react';
 import { X, Plus, Save, Calculator, Package, Truck, Euro, AlertCircle } from 'lucide-react';
-import { CreateProductDto } from '../types';
+import Dropdown from '@/app/shared/components/form/Dropdown';
+import { CreateProductDto } from '../../types';
+import { useReferences } from '../../hooks/useReferences';
 
 interface CreateProductModalProps {
   isOpen: boolean;
@@ -19,45 +21,72 @@ export default function CreateProductModal({
   onSubmit, 
   loading = false 
 }: CreateProductModalProps) {
+  const {
+    productTypes,
+    brands,
+    models,
+    colors,
+    conditions,
+    loading: referencesLoading,
+    loadModelsByBrand,
+    error: referencesError
+  } = useReferences();
+
+  // 🚀 DONNÉES DE TEST PRÉ-REMPLIES
   const [formData, setFormData] = useState<CreateProductDto>({
-    // Informations de base
-    name: '',
-    description: '',
-    category: 'Smartphones',
-    brand: '',
-    model: '',
+    // Informations de base - DONNÉES DE TEST
+    name: 'iPhone 15 Pro Max 256GB Titanium Blue',
+    description: 'Apple iPhone 15 Pro Max avec 256GB de stockage, couleur Titanium Blue, état neuf avec garantie Apple.',
+    productTypeId: 1, // Supposons que 1 = Smartphone
+    brandId: 2, // Supposons que 2 = Apple
+    modelId: 5, // Supposons que 5 = iPhone 15 Pro Max
+    colorId: 7, // Supposons que 7 = Titanium Blue
+    conditionId: 1, // Supposons que 1 = Neuf
     
-    // Prix et coûts
-    purchasePrice: 0,
-    transportCost: 0,
-    sellingPrice: 0,
+    // Prix et coûts - DONNÉES DE TEST
+    purchasePrice: 950.00,
+    transportCost: 30.00,
+    sellingPrice: 1299.00,
     
-    // Stock
-    stock: 0,
+    // Stock - DONNÉES DE TEST
+    stock: 2,
     minStockLevel: 1,
     
-    // Caractéristiques
-    condition: 'Neuf',
-    conditionGrade: 'A+',
-    storage: '',
-    color: '',
-    memory: '',
-    processor: '',
-    screenSize: '',
+    // Caractéristiques - DONNÉES DE TEST
+    storage: '256GB',
+    memory: '8GB',
+    processor: 'A17 Pro',
+    screenSize: '6.7"',
     
-    // Fournisseur et logistique
-    supplierName: '',
-    supplierCity: '',
-    importBatch: '',
-    invoiceNumber: '',
+    // Fournisseur et logistique - DONNÉES DE TEST
+    supplierName: 'AppleStore Roma',
+    supplierCity: 'Roma',
+    purchaseDate: '2025-01-18T00:00:00Z',
+    arrivalDate: '2025-01-21T00:00:00Z',
+    importBatch: 'IT2025006',
+    invoiceNumber: 'INV-2025-009',
+    status: 'Available',
     
-    // Optionnel
-    warrantyInfo: '',
-    imageUrl: '',
-    notes: ''
+    // Optionnel - DONNÉES DE TEST
+    warrantyInfo: 'Garantie Apple 1 an',
+    imageUrl: 'https://example.com/iphone-15-pro-max.jpg',
+    notes: 'Produit de test - État parfait, emballage d\'origine'
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Debug: Log des références chargées
+  React.useEffect(() => {
+    console.log('🔍 État des références:', {
+      productTypes: productTypes.length,
+      brands: brands.length,
+      models: models.length,
+      colors: colors.length,
+      conditions: conditions.length,
+      loading: referencesLoading,
+      error: referencesError
+    });
+  }, [productTypes, brands, models, colors, conditions, referencesLoading, referencesError]);
 
   // Calculer automatiquement la marge
   const calculateMargin = () => {
@@ -83,12 +112,94 @@ export default function CreateProductModal({
       processedValue = value === '' ? 0 : parseFloat(value);
     }
     
-    setFormData(prev => ({ ...prev, [name]: processedValue }));
+    setFormData((prev: CreateProductDto) => ({ ...prev, [name]: processedValue }));
     
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev: Record<string, string>) => ({ ...prev, [name]: '' }));
     }
+  };
+
+  // Fonction pour les dropdowns - TYPAGE CORRIGÉ
+  const handleDropdownChange = (name: string, value: number) => {
+    console.log(`🔄 Dropdown changé: ${name} = ${value}`);
+    setFormData((prev: CreateProductDto) => ({ ...prev, [name]: value }));
+    
+    // Clear error
+    if (errors[name]) {
+      setErrors((prev: Record<string, string>) => ({ ...prev, [name]: '' }));
+    }
+
+    // Charger les modèles quand la marque change
+    if (name === 'brandId' && value > 0) {
+      console.log('🔄 Chargement des modèles pour la marque:', value);
+      loadModelsByBrand(value);
+      setFormData((prev: CreateProductDto) => ({ ...prev, modelId: 0 }));
+    }
+  };
+
+  // Fonction pour les dates - TYPAGE CORRIGÉ
+  const handleDateChange = (name: string, value: string) => {
+    const dateValue = value ? value + 'T00:00:00Z' : '';
+    console.log(`🔄 Date changée: ${name} = ${dateValue}`);
+    setFormData((prev: CreateProductDto) => ({ ...prev, [name]: dateValue }));
+  };
+
+  // 🎯 FONCTION POUR REMPLIR AVEC DES DONNÉES ALÉATOIRES
+  const fillWithRandomTestData = () => {
+    const testProducts = [
+      {
+        name: 'Samsung Galaxy S24 Ultra 512GB',
+        description: 'Samsung Galaxy S24 Ultra avec 512GB, S Pen inclus, état neuf',
+        supplierName: 'Samsung Milano',
+        importBatch: 'IT2025007',
+        invoiceNumber: 'INV-2025-010',
+        purchasePrice: 850,
+        sellingPrice: 1199,
+        storage: '512GB',
+        memory: '12GB',
+        processor: 'Snapdragon 8 Gen 3',
+        screenSize: '6.8"'
+      },
+      {
+        name: 'MacBook Air M2 13" 256GB',
+        description: 'MacBook Air M2 13 pouces, 256GB SSD, 8GB RAM, état neuf',
+        supplierName: 'AppleStore Milano',
+        importBatch: 'IT2025008',
+        invoiceNumber: 'INV-2025-011',
+        purchasePrice: 950,
+        sellingPrice: 1299,
+        storage: '256GB SSD',
+        memory: '8GB',
+        processor: 'Apple M2',
+        screenSize: '13.6"'
+      },
+      {
+        name: 'iPad Pro 12.9" M2 128GB',
+        description: 'iPad Pro 12.9 pouces avec puce M2, 128GB, Wi-Fi, état neuf',
+        supplierName: 'TechItalia Roma',
+        importBatch: 'IT2025009',
+        invoiceNumber: 'INV-2025-012',
+        purchasePrice: 750,
+        sellingPrice: 1049,
+        storage: '128GB',
+        memory: '8GB',
+        processor: 'Apple M2',
+        screenSize: '12.9"'
+      }
+    ];
+
+    const randomProduct = testProducts[Math.floor(Math.random() * testProducts.length)];
+    const today = new Date().toISOString().split('T')[0];
+    
+    setFormData((prev: CreateProductDto) => ({
+      ...prev,
+      ...randomProduct,
+      purchaseDate: today + 'T00:00:00Z',
+      arrivalDate: today + 'T00:00:00Z',
+      transportCost: Math.floor(Math.random() * 50) + 20, // 20-70€
+      stock: Math.floor(Math.random() * 5) + 1, // 1-5 unités
+    }));
   };
 
   const validateForm = (): boolean => {
@@ -97,8 +208,10 @@ export default function CreateProductModal({
     // Validations obligatoires
     if (!formData.name.trim()) newErrors.name = 'Le nom est requis';
     if (!formData.description.trim()) newErrors.description = 'La description est requise';
-    if (!formData.brand.trim()) newErrors.brand = 'La marque est requise';
-    if (!formData.model.trim()) newErrors.model = 'Le modèle est requis';
+    if (!formData.productTypeId || formData.productTypeId === 0) newErrors.productTypeId = 'Le type de produit est requis';
+    if (!formData.brandId || formData.brandId === 0) newErrors.brandId = 'La marque est requise';
+    if (!formData.modelId || formData.modelId === 0) newErrors.modelId = 'Le modèle est requis';
+    if (!formData.conditionId || formData.conditionId === 0) newErrors.conditionId = 'La condition est requise';
     if (formData.purchasePrice <= 0) newErrors.purchasePrice = 'Le prix d\'achat doit être supérieur à 0';
     if (formData.sellingPrice <= 0) newErrors.sellingPrice = 'Le prix de vente doit être supérieur à 0';
     if (formData.stock < 0) newErrors.stock = 'Le stock doit être positif ou nul';
@@ -107,32 +220,67 @@ export default function CreateProductModal({
     if (!formData.invoiceNumber.trim()) newErrors.invoiceNumber = 'Le numéro de facture est requis';
     
     setErrors(newErrors);
+    console.log('🔍 Erreurs de validation:', newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    console.log('🚀 Tentative de soumission du formulaire...');
+    console.log('📋 Données du formulaire avant validation:', formData);
+    
+    if (!validateForm()) {
+      console.log('❌ Validation échouée');
+      return;
+    }
     
     try {
-      await onSubmit(formData);
+      // Ne pas envoyer colorId si c'est 0
+      const submitData = { ...formData };
+      if (submitData.colorId === 0) {
+        delete submitData.colorId;
+      }
       
-      // Reset form après succès
-      setFormData({
-        name: '', description: '', category: 'Smartphones', brand: '', model: '',
-        purchasePrice: 0, transportCost: 0, sellingPrice: 0, stock: 0, minStockLevel: 1,
-        condition: 'Neuf', conditionGrade: 'A+', storage: '', color: '', memory: '',
-        processor: '', screenSize: '', supplierName: '', supplierCity: '', importBatch: '',
-        invoiceNumber: '', warrantyInfo: '', imageUrl: '', notes: ''
-      });
+      console.log('📤 Données à envoyer à l\'API:', JSON.stringify(submitData, null, 2));
+      
+      await onSubmit(submitData);
+      
+      console.log('✅ Produit créé avec succès');
+      
+      // Reset form après succès - AVEC NOUVELLES DONNÉES DE TEST
+      fillWithRandomTestData();
       setErrors({});
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('❌ Erreur lors de la création du produit:', error);
     }
   };
 
   if (!isOpen) return null;
+
+  // Affichage de l'erreur des références
+  if (referencesError) {
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
+            <div className="text-center">
+              <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Erreur de chargement</h3>
+              <p className="text-sm text-gray-500 mb-4">{referencesError}</p>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -151,16 +299,27 @@ export default function CreateProductModal({
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Ajouter un nouveau produit</h2>
-                <p className="text-sm text-gray-500">Créez un nouveau produit dans votre inventaire</p>
+                <p className="text-sm text-gray-500">Données de test pré-remplies pour faciliter les tests</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              disabled={loading}
-            >
-              <X className="h-5 w-5 text-gray-500" />
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Bouton pour générer de nouvelles données de test */}
+              <button
+                type="button"
+                onClick={fillWithRandomTestData}
+                className="px-3 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200 transition-colors"
+                disabled={loading}
+              >
+                🎲 Nouvelles données
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                disabled={loading}
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
           </div>
 
           {/* Form */}
@@ -186,7 +345,7 @@ export default function CreateProductModal({
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors.name ? 'border-red-300' : 'border-gray-300'
                       }`}
-                      placeholder="Ex: Samsung Galaxy S24 Ultra"
+                      placeholder="Ex: iPhone 15 Pro Max 256GB"
                       disabled={loading}
                     />
                     {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name}</p>}
@@ -210,84 +369,72 @@ export default function CreateProductModal({
                     {errors.description && <p className="text-red-600 text-sm mt-1">{errors.description}</p>}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie</label>
-                    <select
-                      name="category"
-                      value={formData.category}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      disabled={loading}
-                    >
-                      <option value="Smartphones">Smartphones</option>
-                      <option value="Tablets">Tablettes</option>
-                      <option value="Laptops">Ordinateurs portables</option>
-                      <option value="Accessories">Accessoires</option>
-                    </select>
-                  </div>
+                  {/* Dropdowns */}
+                  <Dropdown
+                    name="productTypeId"
+                    value={formData.productTypeId}
+                    options={productTypes}
+                    onChange={(value) => handleDropdownChange('productTypeId', value)}
+                    label="Type de produit"
+                    placeholder="Sélectionner un type..."
+                    required
+                    disabled={loading}
+                    loading={referencesLoading}
+                    error={errors.productTypeId}
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Marque *</label>
-                    <input
-                      type="text"
-                      name="brand"
-                      value={formData.brand}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.brand ? 'border-red-300' : 'border-gray-300'
-                      }`}
-                      placeholder="Ex: Samsung, Apple..."
+                  <Dropdown
+                    name="brandId"
+                    value={formData.brandId}
+                    options={brands}
+                    onChange={(value) => handleDropdownChange('brandId', value)}
+                    label="Marque"
+                    placeholder="Sélectionner une marque..."
+                    required
+                    disabled={loading}
+                    loading={referencesLoading}
+                    error={errors.brandId}
+                  />
+
+                  <Dropdown
+                    name="modelId"
+                    value={formData.modelId}
+                    options={models}
+                    onChange={(value) => handleDropdownChange('modelId', value)}
+                    label="Modèle"
+                    placeholder="Sélectionner un modèle..."
+                    required
+                    disabled={loading || !formData.brandId}
+                    loading={referencesLoading}
+                    error={errors.modelId}
+                  />
+
+                  <Dropdown
+                    name="colorId"
+                    value={formData.colorId || ''}
+                    options={colors}
+                    onChange={(value) => handleDropdownChange('colorId', value)}
+                    label="Couleur"
+                    placeholder="Sélectionner une couleur..."
+                    disabled={loading}
+                    loading={referencesLoading}
+                    error={errors.colorId}
+                  />
+
+                  <div className="md:col-span-2">
+                    <Dropdown
+                      name="conditionId"
+                      value={formData.conditionId}
+                      options={conditions}
+                      onChange={(value) => handleDropdownChange('conditionId', value)}
+                      label="Condition"
+                      placeholder="Sélectionner une condition..."
+                      required
                       disabled={loading}
+                      loading={referencesLoading}
+                      error={errors.conditionId}
+                      showDescription={true}
                     />
-                    {errors.brand && <p className="text-red-600 text-sm mt-1">{errors.brand}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Modèle *</label>
-                    <input
-                      type="text"
-                      name="model"
-                      value={formData.model}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.model ? 'border-red-300' : 'border-gray-300'
-                      }`}
-                      placeholder="Ex: Galaxy S24 Ultra"
-                      disabled={loading}
-                    />
-                    {errors.model && <p className="text-red-600 text-sm mt-1">{errors.model}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Condition</label>
-                    <select
-                      name="condition"
-                      value={formData.condition}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      disabled={loading}
-                    >
-                      <option value="Neuf">Neuf</option>
-                      <option value="Reconditionné">Reconditionné</option>
-                      <option value="Occasion">Occasion</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Grade</label>
-                    <select
-                      name="conditionGrade"
-                      value={formData.conditionGrade}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      disabled={loading}
-                    >
-                      <option value="A+">A+</option>
-                      <option value="A">A</option>
-                      <option value="B+">B+</option>
-                      <option value="B">B</option>
-                      <option value="C">C</option>
-                    </select>
                   </div>
                 </div>
               </div>
@@ -295,7 +442,7 @@ export default function CreateProductModal({
               {/* Caractéristiques techniques */}
               <div className="bg-gray-50 rounded-xl p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Caractéristiques techniques</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Stockage</label>
                     <input
@@ -304,20 +451,7 @@ export default function CreateProductModal({
                       value={formData.storage || ''}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Ex: 512GB"
-                      disabled={loading}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Couleur</label>
-                    <input
-                      type="text"
-                      name="color"
-                      value={formData.color || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Ex: Titanium Black"
+                      placeholder="Ex: 256GB"
                       disabled={loading}
                     />
                   </div>
@@ -330,7 +464,7 @@ export default function CreateProductModal({
                       value={formData.memory || ''}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Ex: 12GB"
+                      placeholder="Ex: 8GB"
                       disabled={loading}
                     />
                   </div>
@@ -343,7 +477,7 @@ export default function CreateProductModal({
                       value={formData.processor || ''}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Ex: Snapdragon 8 Gen 3"
+                      placeholder="Ex: A17 Pro"
                       disabled={loading}
                     />
                   </div>
@@ -356,7 +490,7 @@ export default function CreateProductModal({
                       value={formData.screenSize || ''}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Ex: 6.8\"
+                      placeholder="Ex: 6.7\"
                       disabled={loading}
                     />
                   </div>
@@ -384,7 +518,7 @@ export default function CreateProductModal({
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
                         errors.purchasePrice ? 'border-red-300' : 'border-gray-300'
                       }`}
-                      placeholder="850.00"
+                      placeholder="950.00"
                       disabled={loading}
                     />
                     {errors.purchasePrice && <p className="text-red-600 text-sm mt-1">{errors.purchasePrice}</p>}
@@ -402,7 +536,7 @@ export default function CreateProductModal({
                       min="0"
                       step="0.01"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder="25.00"
+                      placeholder="30.00"
                       disabled={loading}
                     />
                   </div>
@@ -421,7 +555,7 @@ export default function CreateProductModal({
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
                         errors.sellingPrice ? 'border-red-300' : 'border-gray-300'
                       }`}
-                      placeholder="1199.00"
+                      placeholder="1299.00"
                       disabled={loading}
                     />
                     {errors.sellingPrice && <p className="text-red-600 text-sm mt-1">{errors.sellingPrice}</p>}
@@ -477,7 +611,7 @@ export default function CreateProductModal({
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors.stock ? 'border-red-300' : 'border-gray-300'
                       }`}
-                      placeholder="3"
+                      placeholder="2"
                       disabled={loading}
                     />
                     {errors.stock && <p className="text-red-600 text-sm mt-1">{errors.stock}</p>}
@@ -501,7 +635,7 @@ export default function CreateProductModal({
                 </div>
               </div>
 
-              {/* Fournisseur */}
+              {/* Fournisseur et logistique */}
               <div className="bg-orange-50 rounded-xl p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
                   <Truck className="h-5 w-5 text-orange-600" />
@@ -520,7 +654,7 @@ export default function CreateProductModal({
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                         errors.supplierName ? 'border-red-300' : 'border-gray-300'
                       }`}
-                      placeholder="TechItalia Milano"
+                      placeholder="AppleStore Roma"
                       disabled={loading}
                     />
                     {errors.supplierName && <p className="text-red-600 text-sm mt-1">{errors.supplierName}</p>}
@@ -536,7 +670,35 @@ export default function CreateProductModal({
                       value={formData.supplierCity || ''}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="Milano"
+                      placeholder="Roma"
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Date d'achat *
+                    </label>
+                    <input
+                      type="date"
+                      name="purchaseDate"
+                      value={formData.purchaseDate ? formData.purchaseDate.split('T')[0] : ''}
+                      onChange={(e) => handleDateChange('purchaseDate', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Date d'arrivée *
+                    </label>
+                    <input
+                      type="date"
+                      name="arrivalDate"
+                      value={formData.arrivalDate ? formData.arrivalDate.split('T')[0] : ''}
+                      onChange={(e) => handleDateChange('arrivalDate', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       disabled={loading}
                     />
                   </div>
@@ -553,7 +715,7 @@ export default function CreateProductModal({
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                         errors.importBatch ? 'border-red-300' : 'border-gray-300'
                       }`}
-                      placeholder="IT2025005"
+                      placeholder="IT2025006"
                       disabled={loading}
                     />
                     {errors.importBatch && <p className="text-red-600 text-sm mt-1">{errors.importBatch}</p>}
@@ -571,7 +733,7 @@ export default function CreateProductModal({
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
                         errors.invoiceNumber ? 'border-red-300' : 'border-gray-300'
                       }`}
-                      placeholder="INV-2025-008"
+                      placeholder="INV-2025-009"
                       disabled={loading}
                     />
                     {errors.invoiceNumber && <p className="text-red-600 text-sm mt-1">{errors.invoiceNumber}</p>}
@@ -593,7 +755,7 @@ export default function CreateProductModal({
                       value={formData.warrantyInfo || ''}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Garantie constructeur 2 ans"
+                      placeholder="Garantie Apple 1 an"
                       disabled={loading}
                     />
                   </div>
@@ -608,7 +770,7 @@ export default function CreateProductModal({
                       value={formData.imageUrl || ''}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="https://example.com/galaxy-s24-ultra.jpg"
+                      placeholder="https://example.com/iphone-15-pro-max.jpg"
                       disabled={loading}
                     />
                   </div>
@@ -629,13 +791,26 @@ export default function CreateProductModal({
                   </div>
                 </div>
               </div>
+
+              {/* Debug Info */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-yellow-800 mb-2">🔍 Debug Info</h4>
+                  <div className="text-xs text-yellow-700 space-y-1">
+                    <p><strong>Références chargées:</strong> Types({productTypes.length}), Marques({brands.length}), Modèles({models.length}), Couleurs({colors.length}), Conditions({conditions.length})</p>
+                    <p><strong>IDs sélectionnés:</strong> ProductType={formData.productTypeId}, Brand={formData.brandId}, Model={formData.modelId}, Color={formData.colorId}, Condition={formData.conditionId}</p>
+                    <p><strong>Prix:</strong> Achat={formData.purchasePrice}€, Transport={formData.transportCost}€, Vente={formData.sellingPrice}€</p>
+                    <p><strong>Marge calculée:</strong> {margin.toFixed(2)}€ ({marginPercent.toFixed(1)}%)</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer */}
             <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <AlertCircle className="h-4 w-4" />
-                <span>Les champs marqués d'un * sont obligatoires</span>
+                <span>🚀 Version de test avec données pré-remplies</span>
               </div>
               
               <div className="flex items-center gap-3">
@@ -649,7 +824,7 @@ export default function CreateProductModal({
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || referencesLoading}
                   className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {loading ? (
@@ -660,7 +835,7 @@ export default function CreateProductModal({
                   ) : (
                     <>
                       <Save className="h-4 w-4" />
-                      Créer le produit
+                      🚀 Créer le produit de test
                     </>
                   )}
                 </button>

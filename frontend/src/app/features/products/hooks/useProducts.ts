@@ -70,7 +70,7 @@ export function useProducts(): UseProductsState & UseProductsActions {
   }, [updateState]);
 
   // ✅ FIX : Correction de la fonction createProduct
-  const createProduct = useCallback(async (product: CreateProductDto) => {
+    const createProduct = useCallback(async (product: CreateProductDto) => {
     updateState({ loading: true, error: null });
     try {
       const newProduct = await productService.createProduct(product);

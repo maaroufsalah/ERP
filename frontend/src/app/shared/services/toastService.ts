@@ -1,26 +1,34 @@
-﻿// app/shared/services/toastService.ts
+﻿// src/app/shared/services/toastService.ts
 
-import { toast } from "react-hot-toast";
+type ToastType = 'success' | 'error' | 'info' | 'warning';
 
-export const showToast = (
-  message: string | null | undefined,
-  type: "success" | "error" | "info" | "warning" = "info"
-) => {
-  if (!message) {
-    message = "Merci de réessayer ultérieurement.";
+export function showToast(message: string, type: ToastType = 'info') {
+  // Pour l'instant, utilisons console.log avec des emojis pour le debug
+  // Plus tard, vous pourrez intégrer une vraie librairie de toast comme react-hot-toast
+  
+  const emoji = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  console.log(`${emoji[type]} Toast ${type.toUpperCase()}: ${message}`);
+
+  // Version simple avec alert pour le debug immédiat
+  if (type === 'error') {
+    console.error('🔥 ERREUR:', message);
+    // Optionnel: décommenter pour avoir une popup
+    // alert(`Erreur: ${message}`);
+  } else if (type === 'success') {
+    console.log('🎉 SUCCÈS:', message);
   }
+}
 
-  switch (type) {
-    case "success":
-      toast.success(message, { position: "bottom-right" });
-      break;
-    case "error":
-      toast.error(message, { position: "bottom-right" });
-      break;
-    case "warning":
-      toast(message, { position: "bottom-right", icon: "⚠️" });
-      break;
-    default:
-      toast(message, { position: "bottom-right" });
-  }
+// Export pour compatibilité avec les imports existants
+export const toastService = {
+  success: (message: string) => showToast(message, 'success'),
+  error: (message: string) => showToast(message, 'error'),
+  warning: (message: string) => showToast(message, 'warning'),
+  info: (message: string) => showToast(message, 'info'),
 };

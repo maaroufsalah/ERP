@@ -258,7 +258,7 @@ namespace ERP.Application.Services
                 _logger.LogInformation("Récupération des produits par marque: {BrandId}", brandId);
 
                 var products = await _productRepository.GetWithFilterAndIncludesAsync(
-                    filter: p => p.BrandId == brandId && !p.IsDeleted && p.IsActive,
+                    filter: p => p.BrandId == brandId && !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
@@ -282,7 +282,7 @@ namespace ERP.Application.Services
                 _logger.LogInformation("Récupération des produits par modèle: {ModelId}", modelId);
 
                 var products = await _productRepository.GetWithFilterAndIncludesAsync(
-                    filter: p => p.ModelId == modelId && !p.IsDeleted && p.IsActive,
+                    filter: p => p.ModelId == modelId && !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
@@ -306,7 +306,7 @@ namespace ERP.Application.Services
                 _logger.LogInformation("Récupération des produits par couleur: {ColorId}", colorId);
 
                 var products = await _productRepository.GetWithFilterAndIncludesAsync(
-                    filter: p => p.ColorId == colorId && !p.IsDeleted && p.IsActive,
+                    filter: p => p.ColorId == colorId && !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
@@ -330,7 +330,7 @@ namespace ERP.Application.Services
                 _logger.LogInformation("Récupération des produits par condition: {ConditionId}", conditionId);
 
                 var products = await _productRepository.GetWithFilterAndIncludesAsync(
-                    filter: p => p.ConditionId == conditionId && !p.IsDeleted && p.IsActive,
+                    filter: p => p.ConditionId == conditionId && !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
@@ -355,7 +355,7 @@ namespace ERP.Application.Services
         {
             try
             {
-                var productTypes = await _productTypeRepository.GetWithFilterAsync(pt => pt.IsActive);
+                var productTypes = await _productTypeRepository.GetWithFilterAsync(pt => !pt.IsDeleted);
                 var orderedTypes = productTypes.OrderBy(pt => pt.SortOrder).ThenBy(pt => pt.Name);
                 return _mapper.Map<IEnumerable<DropdownOptionDto>>(orderedTypes);
             }
@@ -371,8 +371,8 @@ namespace ERP.Application.Services
             try
             {
                 var brands = productTypeId.HasValue
-                    ? await _brandRepository.GetWithFilterAsync(b => b.ProductTypeId == productTypeId.Value && b.IsActive)
-                    : await _brandRepository.GetWithFilterAsync(b => b.IsActive);
+                    ? await _brandRepository.GetWithFilterAsync(b => b.ProductTypeId == productTypeId.Value && !b.IsDeleted)
+                    : await _brandRepository.GetWithFilterAsync(b => !b.IsDeleted);
 
                 var orderedBrands = brands.OrderBy(b => b.SortOrder).ThenBy(b => b.Name);
                 return _mapper.Map<IEnumerable<BrandDropdownDto>>(orderedBrands);
@@ -389,7 +389,7 @@ namespace ERP.Application.Services
             try
             {
                 var filter = PredicateBuilder.True<Model>();
-                filter = filter.And(m => m.IsActive);
+                filter = filter.And(m => !m.IsDeleted);
 
                 if (productTypeId.HasValue)
                     filter = filter.And(m => m.ProductTypeId == productTypeId.Value);
@@ -412,7 +412,7 @@ namespace ERP.Application.Services
         {
             try
             {
-                var colors = await _colorRepository.GetWithFilterAsync(c => c.IsActive);
+                var colors = await _colorRepository.GetWithFilterAsync(c => !c.IsDeleted);
                 var orderedColors = colors.OrderBy(c => c.SortOrder).ThenBy(c => c.Name);
                 return _mapper.Map<IEnumerable<ColorDropdownDto>>(orderedColors);
             }
@@ -427,7 +427,7 @@ namespace ERP.Application.Services
         {
             try
             {
-                var conditions = await _conditionRepository.GetWithFilterAsync(c => c.IsActive);
+                var conditions = await _conditionRepository.GetWithFilterAsync(c => !c.IsDeleted);
                 var orderedConditions = conditions.OrderBy(c => c.SortOrder).ThenBy(c => c.Name);
                 return _mapper.Map<IEnumerable<ConditionDropdownDto>>(orderedConditions);
             }
@@ -453,11 +453,11 @@ namespace ERP.Application.Services
                 var color = await _colorRepository.GetByIdAsync(colorId);
                 var condition = await _conditionRepository.GetByIdAsync(conditionId);
 
-                if (productType == null || !productType.IsActive ||
-                    brand == null || !brand.IsActive ||
-                    model == null || !model.IsActive ||
-                    color == null || !color.IsActive ||
-                    condition == null || !condition.IsActive)
+                if (productType == null || productType.IsDeleted ||
+                    brand == null || productType.IsDeleted ||
+                    model == null || productType.IsDeleted ||
+                    color == null || color.IsDeleted ||
+                    condition == null || condition.IsDeleted)
                 {
                     return false;
                 }
@@ -490,7 +490,7 @@ namespace ERP.Application.Services
             try
             {
                 var brand = await _brandRepository.GetByIdAsync(brandId);
-                return brand != null && brand.IsActive && brand.ProductTypeId == productTypeId;
+                return brand != null && !brand.IsDeleted && brand.ProductTypeId == productTypeId;
             }
             catch (Exception ex)
             {
@@ -504,7 +504,7 @@ namespace ERP.Application.Services
             try
             {
                 var model = await _modelRepository.GetByIdAsync(modelId);
-                return model != null && model.IsActive && model.BrandId == brandId;
+                return model != null && !model.IsDeleted && model.BrandId == brandId;
             }
             catch (Exception ex)
             {
@@ -684,7 +684,7 @@ namespace ERP.Application.Services
                 _logger.LogInformation("Récupération des produits par fournisseur: {SupplierName}", supplierName);
 
                 var products = await _productRepository.GetWithFilterAndIncludesAsync(
-                    filter: p => p.SupplierName.Contains(supplierName) && !p.IsDeleted && p.IsActive,
+                    filter: p => p.SupplierName.Contains(supplierName) && !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
@@ -708,7 +708,7 @@ namespace ERP.Application.Services
                 _logger.LogInformation("Récupération des produits par lot: {ImportBatch}", importBatch);
 
                 var products = await _productRepository.GetWithFilterAndIncludesAsync(
-                    filter: p => p.ImportBatch == importBatch && !p.IsDeleted && p.IsActive,
+                    filter: p => p.ImportBatch == importBatch && !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
@@ -732,7 +732,7 @@ namespace ERP.Application.Services
                 _logger.LogInformation("Récupération des produits par statut: {Status}", status);
 
                 var products = await _productRepository.GetWithFilterAndIncludesAsync(
-                    filter: p => p.Status == status && !p.IsDeleted && p.IsActive,
+                    filter: p => p.Status == status && !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
@@ -757,7 +757,7 @@ namespace ERP.Application.Services
                 _logger.LogInformation("Récupération des produits en stock faible (seuil: {Threshold})", thresholdValue);
 
                 var products = await _productRepository.GetWithFilterAndIncludesAsync(
-                    filter: p => p.Stock <= thresholdValue && !p.IsDeleted && p.IsActive,
+                    filter: p => p.Stock <= thresholdValue && !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
@@ -872,7 +872,7 @@ namespace ERP.Application.Services
                 _logger.LogInformation("Récupération des produits pour liste");
 
                 var products = await _productRepository.GetWithFilterAndIncludesAsync(
-                    filter: p => !p.IsDeleted && p.IsActive,
+                    filter: p => !p.IsDeleted,
                     p => p.ProductType,
                     p => p.Brand,
                     p => p.Model,
