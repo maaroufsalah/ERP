@@ -19,6 +19,7 @@ import {
   MoreHorizontal,
   Filter
 } from 'lucide-react';
+import ProductDetailModal from './ProductDetailModal';
 
 export default function ProductTable() {
   const {
@@ -36,7 +37,9 @@ export default function ProductTable() {
   const [selectedProductType, setSelectedProductType] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
   // État pour le modal de création
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -374,12 +377,12 @@ export default function ProductTable() {
                             {product.name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {product.brand?.name} - {product.model?.name}
+                            {product.brandName} - {product.modelName}
                           </div>
                           <div className="text-xs text-gray-400">
-                            {product.productType?.name}
+                            {product.productTypeName}
                             {product.storage && ` • ${product.storage}`}
-                            {product.color?.name && ` • ${product.color.name}`}
+                            {product.colorName && ` • ${product.colorName}`}
                           </div>
                         </div>
                       </div>
@@ -435,7 +438,11 @@ export default function ProductTable() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
-                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
+                          onClick={() => {
+                            setSelectedProduct(product);
+                            setShowDetailModal(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors cursor-pointer"
                           title="Voir"
                         >
                           <Eye className="h-4 w-4" />
@@ -511,6 +518,27 @@ export default function ProductTable() {
         onSubmit={handleCreateProduct}
         loading={loading}
       />
+
+      <ProductDetailModal
+          product={selectedProduct}
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedProduct(null);
+          }}
+          onEdit={(product) => {
+            setShowDetailModal(false);
+            // Ouvrir modal d'édition
+          }}
+          onDelete={(product) => {
+            setShowDetailModal(false);
+            handleDelete(product.id, product.name);
+          }}
+          onMarkAsSold={(product) => {
+            setShowDetailModal(false);
+            // Implémenter marquage vendu
+          }}
+        />
     </div>
   );
 }

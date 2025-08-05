@@ -1,12 +1,12 @@
-﻿// app/features/products/components/ProductList.tsx
-
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { useProducts } from '../hooks/useProducts';
 import ProductCard from './ProductCard';
 import { Button, Input, Modal } from '@/app/shared/components/ui';
+import { formatCurrency } from '@/app/shared/utils';
+import ProductDetailModal from './ProductDetailModal';
 
 interface ProductListProps {
   initialProducts?: Product[];
@@ -22,7 +22,7 @@ export default function ProductList({
   
   // État local pour les filtres
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedProductType, setSelectedProductType] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -31,6 +31,7 @@ export default function ProductList({
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Hook personnalisé
@@ -57,34 +58,50 @@ export default function ProductList({
     }
   }, [initialProducts, loadProducts]);
 
-  // Filtrage local
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      if (searchTerm.trim()) {
-        searchProducts(searchTerm);
-      } else if (selectedCategory) {
-        filterByCategory(selectedCategory);
-      } else if (selectedBrand) {
-        filterByBrand(selectedBrand);
-      } else if (showLowStockOnly) {
-        loadLowStockProducts();
-      } else {
-        loadProducts();
-      }
-    }, 300);
+  // Filtrage local (côté client pour éviter trop d'appels API)
+  const displayProducts = (initialProducts || products).filter(product => {
+    if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !product.brandName?.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !product.modelName?.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    if (selectedProductType && product.productTypeName !== selectedProductType) {
+      return false;
+    }
+    
+    if (selectedBrand && product.brandName !== selectedBrand) {
+      return false;
+    }
+    
+    if (showLowStockOnly && !product.isLowStock) {
+      return false;
+    }
+    
+    return true;
+  });
 
-    return () => clearTimeout(debounceTimer);
-  }, [searchTerm, selectedCategory, selectedBrand, showLowStockOnly]);
+  // Obtenir les options uniques pour les filtres
+  const allProducts = initialProducts || products;
+  const uniqueProductTypes = Array.from(new Set(allProducts.map(p => p.productTypeName).filter(Boolean))).sort();
+  const uniqueBrands = Array.from(new Set(allProducts.map(p => p.brandName).filter(Boolean))).sort();
 
   // Gestionnaires d'événements
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
+    setShowDetailModal(false);
     setShowEditModal(true);
   };
 
   const handleDelete = (product: Product) => {
     setSelectedProduct(product);
+    setShowDetailModal(false);
     setShowDeleteModal(true);
+  };
+
+  const handleView = (product: Product) => {
+    setSelectedProduct(product);
+    setShowDetailModal(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -102,26 +119,18 @@ export default function ProductList({
   const handleMarkAsSold = async (product: Product) => {
     try {
       await markAsSold(product.id);
+      setShowDetailModal(false);
     } catch (error) {
       // Erreur gérée par le hook
     }
   };
 
-  const handleView = (product: Product) => {
-    setSelectedProduct(product);
-    // Ouvrir modal de détail ou naviguer vers page détail
-  };
-
   const resetFilters = () => {
     setSearchTerm('');
-    setSelectedCategory('');
+    setSelectedProductType('');
     setSelectedBrand('');
     setShowLowStockOnly(false);
-    loadProducts();
   };
-
-  // Données à afficher (priorité aux props puis au hook)
-  const displayProducts = initialProducts || products;
 
   // Icônes
   const SearchIcon = () => (
@@ -158,44 +167,48 @@ export default function ProductList({
             {/* Filtres de recherche */}
             <div className="flex flex-1 space-x-4">
               <div className="flex-1 max-w-xs">
-                <Input
-                  placeholder="Rechercher un produit..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  icon={<SearchIcon />}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Rechercher un produit..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <SearchIcon />
+                  </div>
+                </div>
               </div>
               
               <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={selectedProductType}
+                onChange={(e) => setSelectedProductType(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
               >
-                <option value="">Toutes les catégories</option>
-                <option value="Smartphones">Smartphones</option>
-                <option value="Tablets">Tablettes</option>
-                <option value="Laptops">Ordinateurs</option>
-                <option value="Accessories">Accessoires</option>
+                <option value="">Tous les types</option>
+                {uniqueProductTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
               </select>
 
               <select
                 value={selectedBrand}
                 onChange={(e) => setSelectedBrand(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
               >
                 <option value="">Toutes les marques</option>
-                <option value="Samsung">Samsung</option>
-                <option value="Apple">Apple</option>
-                <option value="Huawei">Huawei</option>
-                <option value="Xiaomi">Xiaomi</option>
+                {uniqueBrands.map(brand => (
+                  <option key={brand} value={brand}>{brand}</option>
+                ))}
               </select>
 
-              <label className="flex items-center space-x-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showLowStockOnly}
                   onChange={(e) => setShowLowStockOnly(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                 />
                 <span className="text-sm text-gray-700">Stock faible</span>
               </label>
@@ -204,6 +217,7 @@ export default function ProductList({
                 variant="secondary"
                 size="sm"
                 onClick={resetFilters}
+                className="cursor-pointer"
               >
                 Réinitialiser
               </Button>
@@ -215,13 +229,17 @@ export default function ProductList({
               <div className="flex border border-gray-300 rounded-md">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}
+                  className={`p-2 cursor-pointer transition-colors ${
+                    viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                  }`}
                 >
                   <GridIcon />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}
+                  className={`p-2 cursor-pointer transition-colors ${
+                    viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                  }`}
                 >
                   <ListIcon />
                 </button>
@@ -232,6 +250,7 @@ export default function ProductList({
                 <Button
                   onClick={() => setShowCreateModal(true)}
                   icon={<PlusIcon />}
+                  className="cursor-pointer"
                 >
                   Ajouter un produit
                 </Button>
@@ -246,7 +265,12 @@ export default function ProductList({
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-red-800">{error}</p>
-            <Button variant="secondary" size="sm" onClick={clearError}>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={clearError}
+              className="cursor-pointer"
+            >
               Fermer
             </Button>
           </div>
@@ -270,9 +294,12 @@ export default function ProductList({
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
               {displayProducts.length} produit(s) trouvé(s)
+              {displayProducts.length !== allProducts.length && (
+                <span className="text-gray-400"> sur {allProducts.length}</span>
+              )}
             </div>
             <div className="text-sm text-gray-600">
-              Valeur totale: {displayProducts.reduce((sum, p) => sum + p.totalValue, 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+              Valeur totale: {formatCurrency(displayProducts.reduce((sum, p) => sum + p.totalValue, 0))}
             </div>
           </div>
 
@@ -305,18 +332,28 @@ export default function ProductList({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-8v4m-4 0h8" />
             </svg>
           </div>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun produit</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun produit trouvé</h3>
           <p className="mt-1 text-sm text-gray-500">
-            {searchTerm || selectedCategory || selectedBrand || showLowStockOnly
+            {searchTerm || selectedProductType || selectedBrand || showLowStockOnly
               ? 'Aucun produit ne correspond à vos critères de recherche.'
               : 'Commencez par ajouter votre premier produit.'
             }
           </p>
-          {showCreateButton && (
+          {(searchTerm || selectedProductType || selectedBrand || showLowStockOnly) ? (
+            <div className="mt-6">
+              <Button
+                onClick={resetFilters}
+                className="cursor-pointer"
+              >
+                Réinitialiser les filtres
+              </Button>
+            </div>
+          ) : showCreateButton && (
             <div className="mt-6">
               <Button
                 onClick={() => setShowCreateModal(true)}
                 icon={<PlusIcon />}
+                className="cursor-pointer"
               >
                 Ajouter un produit
               </Button>
@@ -324,6 +361,19 @@ export default function ProductList({
           )}
         </div>
       )}
+
+      {/* Modal de détail du produit */}
+      <ProductDetailModal
+        product={selectedProduct}
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false);
+          setSelectedProduct(null);
+        }}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onMarkAsSold={handleMarkAsSold}
+      />
 
       {/* Modal de confirmation suppression */}
       <Modal
@@ -342,6 +392,7 @@ export default function ProductList({
             <Button
               variant="secondary"
               onClick={() => setShowDeleteModal(false)}
+              className="cursor-pointer"
             >
               Annuler
             </Button>
@@ -349,6 +400,7 @@ export default function ProductList({
               variant="danger"
               onClick={handleConfirmDelete}
               loading={loading}
+              className="cursor-pointer"
             >
               Supprimer
             </Button>
@@ -356,7 +408,7 @@ export default function ProductList({
         </div>
       </Modal>
 
-      {/* TODO: Modals de création et édition */}
+      {/* Modal de création - à implémenter */}
       {showCreateModal && (
         <Modal
           isOpen={showCreateModal}
@@ -366,6 +418,20 @@ export default function ProductList({
         >
           <div className="p-4 text-center text-gray-500">
             Modal de création à implémenter
+          </div>
+        </Modal>
+      )}
+
+      {/* Modal d'édition - à implémenter */}
+      {showEditModal && (
+        <Modal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          title="Modifier le produit"
+          size="lg"
+        >
+          <div className="p-4 text-center text-gray-500">
+            Modal d'édition à implémenter
           </div>
         </Modal>
       )}

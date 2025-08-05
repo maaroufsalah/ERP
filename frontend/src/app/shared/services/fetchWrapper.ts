@@ -10,7 +10,6 @@ async function get(url: string) {
 
     console.log('🔗 Fetching:', baseUrl + url, requestOptions);
     const response = await fetch(baseUrl + url, requestOptions);
-    console.log('🔗 Response:', response);
     return handleResponse(response);
 }
 

@@ -55,7 +55,7 @@ export default function ProductCard({
       Available: 'bg-green-100 text-green-800',
       Sold: 'bg-gray-100 text-gray-800',
       Reserved: 'bg-yellow-100 text-yellow-800',
-      OutOfStock: 'bg-red-100 text-red-800'
+      Inactive: 'bg-red-100 text-red-800'
     };
 
     return (
@@ -81,10 +81,10 @@ export default function ProductCard({
             <div className="text-center">
               <div className="h-16 w-16 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mb-2">
                 <span className="text-white font-bold text-xl">
-                  {product.brand.charAt(0)}
+                  {product.brandName?.charAt(0) || 'P'}
                 </span>
               </div>
-              <span className="text-sm text-gray-500">{product.brand}</span>
+              <span className="text-sm text-gray-500">{product.brandName || 'Sans marque'}</span>
             </div>
           )}
         </div>
@@ -111,7 +111,7 @@ export default function ProductCard({
             {product.name}
           </h3>
           <p className="text-sm text-gray-600">
-            {product.brand} - {product.model}
+            {product.brandName || 'Sans marque'} - {product.modelName || 'Sans modèle'}
           </p>
         </div>
 
@@ -123,15 +123,18 @@ export default function ProductCard({
               <span className="text-gray-900">{product.storage}</span>
             </div>
           )}
-          {product.color && (
+          {product.color?.name && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Couleur:</span>
-              <span className="text-gray-900">{product.color}</span>
+              <span className="text-gray-900">{product.color.name}</span>
             </div>
           )}
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">État:</span>
-            <span className="text-gray-900">{product.condition} ({product.conditionGrade})</span>
+            <span className="text-gray-900">
+              {product.condition?.name || 'Non défini'}
+              {product.condition?.description && ` (${product.condition.description})`}
+            </span>
           </div>
         </div>
 
@@ -186,6 +189,7 @@ export default function ProductCard({
             variant="secondary"
             onClick={() => onView?.(product)}
             icon={<EyeIcon />}
+            className="cursor-pointer"
           >
             Voir
           </Button>
@@ -195,6 +199,7 @@ export default function ProductCard({
             variant="primary"
             onClick={() => onEdit?.(product)}
             icon={<EditIcon />}
+            className="cursor-pointer"
           >
             Modifier
           </Button>
@@ -204,6 +209,7 @@ export default function ProductCard({
             variant="danger"
             onClick={() => onDelete?.(product)}
             icon={<DeleteIcon />}
+            className="cursor-pointer"
           >
             Supprimer
           </Button>
@@ -214,6 +220,7 @@ export default function ProductCard({
               size="sm"
               variant="success"
               onClick={() => onMarkAsSold?.(product)}
+              className="cursor-pointer"
             >
               Marquer vendu
             </Button>
@@ -224,6 +231,7 @@ export default function ProductCard({
               size="sm"
               variant="warning"
               onClick={() => onUpdateStock?.(product)}
+              className="cursor-pointer"
             >
               Réapprovisionner
             </Button>

@@ -34,6 +34,8 @@ interface UseProductsActions {
   
   // Sélection
   selectProduct: (product: Product | null) => void;
+  // Récupération par ID
+  getProductById: (id: number) => Promise<Product | null>;
   
   // Reset
   resetProducts: () => void;
@@ -285,6 +287,22 @@ export function useProducts(): UseProductsState & UseProductsActions {
   //   loadProducts();
   // }, []);
 
+  // Récupérer un produit par son id
+  const getProductById = useCallback(async (id: number): Promise<Product | null> => {
+    updateState({ loading: true, error: null });
+    try {
+      const product = await productService.getProductById(id);
+      updateState({ loading: false });
+      return product;
+    } catch (error: any) {
+      updateState({ 
+        error: error.message || 'Erreur lors de la récupération du produit',
+        loading: false 
+      });
+      return null;
+    }
+  }, [updateState]);
+
   return {
     // État
     ...state,
@@ -303,6 +321,7 @@ export function useProducts(): UseProductsState & UseProductsActions {
     markAsReserved,
     markAsAvailable,
     selectProduct,
+    getProductById,
     resetProducts,
     clearError
   };

@@ -9,6 +9,16 @@ export interface Product {
   modelId: number;
   colorId?: number;
   conditionId: number;
+  
+  // ✅ AJOUTER LES LIBELLÉS DE L'API
+  productTypeName: string;
+  brandName: string;
+  modelName: string;
+  colorName: string;
+  colorHexCode?: string;
+  conditionName: string;
+  conditionQualityPercentage: number;
+  
   purchasePrice: number;
   transportCost: number;
   totalCostPrice: number;
@@ -42,7 +52,7 @@ export interface Product {
   isLowStock: boolean;
   daysInStock: number;
   
-  // Relations pour l'affichage
+  // ✅ GARDER AUSSI LES RELATIONS POUR COMPATIBILITÉ
   productType?: ProductType;
   brand?: Brand;
   model?: Model;
