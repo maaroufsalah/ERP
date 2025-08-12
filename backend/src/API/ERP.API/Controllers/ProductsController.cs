@@ -1,4 +1,4 @@
-﻿using ERP.Application.DTOs;
+﻿using ERP.Application.DTOs.Product;
 using ERP.Application.Interfaces.IServices;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,7 +1,7 @@
 // ================================================================
-// DBCONTEXT MODIFIÉ POUR LES NOUVELLES ENTITÉS
+// DBCONTEXT MODIFIÉ POUR LA NOUVELLE ARCHITECTURE
 // ================================================================
-// Mise à jour du contexte avec les nouvelles entités Products
+// Ajout des nouvelles entités Product Master/Variant + Inventory
 // ================================================================
 
 using ERP.Infrastructure.Entities;
@@ -9,12 +9,14 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ERP.Domain.Entities.Product;
+using ERP.Domain.Entities.Catalog;
+using ERP.Domain.Entities.Inventory;
 
 namespace ERP.Infrastructure.Data
 {
     /// <summary>
     /// Contexte de base de données Entity Framework pour l'ERP
-    /// Version mise à jour avec les entités de référence
+    /// Version mise à jour avec la nouvelle architecture Product Master/Variant + Inventory
     /// </summary>
     public class ErpDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
     {
@@ -23,11 +25,49 @@ namespace ERP.Infrastructure.Data
         }
 
         // ================================================================
-        // DBSETS - TABLES DU MODULE PRODUCTS
+        // DBSETS - CATALOG CONTEXT (Gestion des produits)
         // ================================================================
 
         /// <summary>
-        /// Table des produits (table principale)
+        /// Produits master (références génériques)
+        /// </summary>
+        public DbSet<ProductMaster> ProductMasters { get; set; }
+
+        /// <summary>
+        /// Variantes de produits (produits physiques vendables)
+        /// </summary>
+        public DbSet<ProductVariant> ProductVariants { get; set; }
+
+        // ================================================================
+        // DBSETS - INVENTORY CONTEXT (Gestion des stocks)
+        // ================================================================
+
+        /// <summary>
+        /// Entrepôts et lieux de stockage
+        /// </summary>
+        public DbSet<Warehouse> Warehouses { get; set; }
+
+        /// <summary>
+        /// Emplacements spécifiques dans les entrepôts
+        /// </summary>
+        public DbSet<Location> Locations { get; set; }
+
+        /// <summary>
+        /// Stocks par produit variant et emplacement
+        /// </summary>
+        public DbSet<Stock> Stocks { get; set; }
+
+        /// <summary>
+        /// Historique des mouvements de stock
+        /// </summary>
+        public DbSet<StockMovement> StockMovements { get; set; }
+
+        // ================================================================
+        // DBSETS - TABLES DE RÉFÉRENCE (Shared Kernel)
+        // ================================================================
+
+        /// <summary>
+        /// Table des produits (LEGACY - à migrer vers ProductVariant)
         /// </summary>
         public DbSet<Product> Products { get; set; }
 
@@ -61,21 +101,472 @@ namespace ERP.Infrastructure.Data
             base.OnModelCreating(modelBuilder);
 
             // ================================================================
-            // CONFIGURATION DES ENTITÉS DE RÉFÉRENCE
+            // CONFIGURATION DES NOUVELLES ENTITÉS CATALOG
             // ================================================================
+            ConfigureProductMaster(modelBuilder);
+            ConfigureProductVariant(modelBuilder);
 
+            // ================================================================
+            // CONFIGURATION DES ENTITÉS INVENTORY
+            // ================================================================
+            ConfigureWarehouse(modelBuilder);
+            ConfigureLocation(modelBuilder);
+            ConfigureStock(modelBuilder);
+            ConfigureStockMovement(modelBuilder);
+
+            // ================================================================
+            // CONFIGURATION DES ENTITÉS DE RÉFÉRENCE (EXISTANTES)
+            // ================================================================
             ConfigureProductType(modelBuilder);
             ConfigureBrand(modelBuilder);
             ConfigureModel(modelBuilder);
             ConfigureColor(modelBuilder);
             ConfigureCondition(modelBuilder);
-            ConfigureProduct(modelBuilder);
+            ConfigureProduct(modelBuilder); // LEGACY
             ConfigureApplicationUser(modelBuilder);
         }
 
         // ================================================================
-        // CONFIGURATION PRODUCTTYPE
+        // CONFIGURATION PRODUCTMASTER
         // ================================================================
+        private void ConfigureProductMaster(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ProductMaster>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasComment("Nom commercial générique du produit");
+
+                entity.Property(e => e.Description)
+                    .IsRequired()
+                    .HasMaxLength(2000)
+                    .HasComment("Description générale du produit");
+
+                entity.Property(e => e.ReferenceNumber)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasComment("Numéro de référence interne unique");
+
+                entity.Property(e => e.ProductTypeId)
+                    .IsRequired()
+                    .HasComment("Type de produit");
+
+                entity.Property(e => e.BrandId)
+                    .IsRequired()
+                    .HasComment("Marque du produit");
+
+                entity.Property(e => e.Status)
+                    .HasMaxLength(50)
+                    .HasDefaultValue("Draft");
+
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
+
+                // Relations
+                entity.HasOne(pm => pm.ProductType)
+                    .WithMany()
+                    .HasForeignKey(pm => pm.ProductTypeId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_ProductMaster_ProductType");
+
+                entity.HasOne(pm => pm.Brand)
+                    .WithMany()
+                    .HasForeignKey(pm => pm.BrandId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_ProductMaster_Brand");
+
+                // Index
+                entity.HasIndex(e => e.ReferenceNumber)
+                    .IsUnique()
+                    .HasDatabaseName("IX_ProductMaster_ReferenceNumber_Unique");
+
+                entity.HasIndex(e => new { e.ProductTypeId, e.BrandId })
+                    .HasDatabaseName("IX_ProductMaster_Type_Brand");
+
+                entity.HasIndex(e => e.Status)
+                    .HasDatabaseName("IX_ProductMaster_Status");
+
+                entity.HasIndex(e => e.IsActive)
+                    .HasDatabaseName("IX_ProductMaster_IsActive");
+            });
+        }
+
+        // ================================================================
+        // CONFIGURATION PRODUCTVARIANT
+        // ================================================================
+        private void ConfigureProductVariant(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ProductVariant>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.ProductMasterId)
+                    .IsRequired()
+                    .HasComment("Référence vers le produit master");
+
+                entity.Property(e => e.SKU)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasComment("SKU unique de la variante");
+
+                entity.Property(e => e.VariantName)
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasComment("Nom spécifique de la variante");
+
+                entity.Property(e => e.PurchasePrice)
+                    .HasColumnType("decimal(18,2)")
+                    .IsRequired()
+                    .HasComment("Prix d'achat unitaire");
+
+                entity.Property(e => e.AdditionalCosts)
+                    .HasColumnType("decimal(18,2)")
+                    .HasDefaultValue(0)
+                    .HasComment("Frais additionnels");
+
+                entity.Property(e => e.TotalCostPrice)
+                    .HasColumnType("decimal(18,2)")
+                    .HasComment("Coût total unitaire");
+
+                entity.Property(e => e.SellingPrice)
+                    .HasColumnType("decimal(18,2)")
+                    .IsRequired()
+                    .HasComment("Prix de vente unitaire");
+
+                entity.Property(e => e.Margin)
+                    .HasColumnType("decimal(18,2)")
+                    .HasComment("Marge bénéficiaire");
+
+                entity.Property(e => e.MarginPercentage)
+                    .HasColumnType("decimal(5,2)")
+                    .HasComment("Pourcentage de marge");
+
+                entity.Property(e => e.ConditionId)
+                    .IsRequired()
+                    .HasComment("Condition du produit");
+
+                entity.Property(e => e.Status)
+                    .HasMaxLength(50)
+                    .HasDefaultValue("Available");
+
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
+
+                // Relations
+                entity.HasOne(pv => pv.ProductMaster)
+                    .WithMany(pm => pm.Variants)
+                    .HasForeignKey(pv => pv.ProductMasterId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_ProductVariant_ProductMaster");
+
+                entity.HasOne(pv => pv.Color)
+                    .WithMany()
+                    .HasForeignKey(pv => pv.ColorId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_ProductVariant_Color");
+
+                entity.HasOne(pv => pv.Condition)
+                    .WithMany()
+                    .HasForeignKey(pv => pv.ConditionId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_ProductVariant_Condition");
+
+                // Index
+                entity.HasIndex(e => e.SKU)
+                    .IsUnique()
+                    .HasDatabaseName("IX_ProductVariant_SKU_Unique");
+
+                entity.HasIndex(e => e.Barcode)
+                    .HasDatabaseName("IX_ProductVariant_Barcode");
+
+                entity.HasIndex(e => e.ProductMasterId)
+                    .HasDatabaseName("IX_ProductVariant_ProductMasterId");
+
+                entity.HasIndex(e => new { e.Status, e.IsActive })
+                    .HasDatabaseName("IX_ProductVariant_Status_Active");
+
+                entity.HasIndex(e => e.SupplierName)
+                    .HasDatabaseName("IX_ProductVariant_SupplierName");
+
+                entity.HasIndex(e => e.ImportBatch)
+                    .HasDatabaseName("IX_ProductVariant_ImportBatch");
+            });
+        }
+
+        // ================================================================
+        // CONFIGURATION WAREHOUSE
+        // ================================================================
+        private void ConfigureWarehouse(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Warehouse>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasComment("Nom de l'entrepôt");
+
+                entity.Property(e => e.Code)
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasComment("Code court de l'entrepôt");
+
+                entity.Property(e => e.Type)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasDefaultValue("Warehouse");
+
+                entity.Property(e => e.Address)
+                    .IsRequired()
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.City)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.Country)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasDefaultValue("Maroc");
+
+                entity.Property(e => e.Status)
+                    .HasMaxLength(50)
+                    .HasDefaultValue("Active");
+
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
+
+                entity.Property(e => e.Priority)
+                    .HasDefaultValue(100);
+
+                // Index
+                entity.HasIndex(e => e.Code)
+                    .IsUnique()
+                    .HasDatabaseName("IX_Warehouse_Code_Unique");
+
+                entity.HasIndex(e => e.Type)
+                    .HasDatabaseName("IX_Warehouse_Type");
+
+                entity.HasIndex(e => new { e.Status, e.IsActive })
+                    .HasDatabaseName("IX_Warehouse_Status_Active");
+
+                entity.HasIndex(e => e.City)
+                    .HasDatabaseName("IX_Warehouse_City");
+            });
+        }
+
+        // ================================================================
+        // CONFIGURATION LOCATION
+        // ================================================================
+        private void ConfigureLocation(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Location>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.WarehouseId)
+                    .IsRequired()
+                    .HasComment("Entrepôt auquel appartient cet emplacement");
+
+                entity.Property(e => e.Code)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasComment("Code unique de l'emplacement");
+
+                entity.Property(e => e.Type)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasDefaultValue("Shelf");
+
+                entity.Property(e => e.Status)
+                    .HasMaxLength(50)
+                    .HasDefaultValue("Available");
+
+                entity.Property(e => e.IsActive)
+                    .HasDefaultValue(true);
+
+                entity.Property(e => e.Priority)
+                    .HasDefaultValue(100);
+
+                // Relations
+                entity.HasOne(l => l.Warehouse)
+                    .WithMany(w => w.Locations)
+                    .HasForeignKey(l => l.WarehouseId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_Location_Warehouse");
+
+                entity.HasOne(l => l.ParentLocation)
+                    .WithMany(l => l.ChildLocations)
+                    .HasForeignKey(l => l.ParentLocationId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_Location_ParentLocation");
+
+                // Index
+                entity.HasIndex(e => new { e.WarehouseId, e.Code })
+                    .IsUnique()
+                    .HasDatabaseName("IX_Location_Warehouse_Code_Unique");
+
+                entity.HasIndex(e => e.Type)
+                    .HasDatabaseName("IX_Location_Type");
+
+                entity.HasIndex(e => new { e.Status, e.IsActive })
+                    .HasDatabaseName("IX_Location_Status_Active");
+
+                entity.HasIndex(e => e.Zone)
+                    .HasDatabaseName("IX_Location_Zone");
+
+                entity.HasIndex(e => e.Barcode)
+                    .HasDatabaseName("IX_Location_Barcode");
+            });
+        }
+
+        // ================================================================
+        // CONFIGURATION STOCK
+        // ================================================================
+        private void ConfigureStock(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Stock>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.ProductVariantSKU)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasComment("SKU du produit variant");
+
+                entity.Property(e => e.WarehouseId)
+                    .IsRequired()
+                    .HasComment("Entrepôt où se trouve ce stock");
+
+                entity.Property(e => e.LocationId)
+                    .IsRequired()
+                    .HasComment("Emplacement concerné");
+
+                entity.Property(e => e.MovementNumber)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasComment("Numéro de mouvement unique");
+
+                entity.Property(e => e.MovementType)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasComment("Type de mouvement");
+
+                entity.Property(e => e.Direction)
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasComment("Direction du mouvement");
+
+                entity.Property(e => e.Quantity)
+                    .IsRequired()
+                    .HasComment("Quantité du mouvement");
+
+                entity.Property(e => e.UnitCost)
+                    .HasColumnType("decimal(18,2)")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.TotalCost)
+                    .HasColumnType("decimal(18,2)")
+                    .HasDefaultValue(0);
+
+                entity.Property(e => e.UnitPrice)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.TotalPrice)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.EffectiveDate)
+                    .IsRequired()
+                    .HasComment("Date effective du mouvement");
+
+                entity.Property(e => e.Status)
+                    .HasMaxLength(50)
+                    .HasDefaultValue("Completed");
+
+                entity.Property(e => e.IsConfirmed)
+                    .HasDefaultValue(true);
+
+                entity.Property(e => e.Method)
+                    .HasMaxLength(50)
+                    .HasDefaultValue("Manual");
+
+                entity.Property(e => e.Source)
+                    .HasMaxLength(50)
+                    .HasDefaultValue("ERP");
+
+                // Relations
+                entity.HasOne(sm => sm.Warehouse)
+                    .WithMany(w => w.StockMovements)
+                    .HasForeignKey(sm => sm.WarehouseId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_StockMovement_Warehouse");
+
+                entity.HasOne(sm => sm.Location)
+                    .WithMany(l => l.StockMovements)
+                    .HasForeignKey(sm => sm.LocationId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_StockMovement_Location");
+
+                entity.HasOne(sm => sm.SourceWarehouse)
+                    .WithMany()
+                    .HasForeignKey(sm => sm.SourceWarehouseId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_StockMovement_SourceWarehouse");
+
+                entity.HasOne(sm => sm.SourceLocation)
+                    .WithMany()
+                    .HasForeignKey(sm => sm.SourceLocationId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_StockMovement_SourceLocation");
+
+                entity.HasOne(sm => sm.DestinationWarehouse)
+                    .WithMany()
+                    .HasForeignKey(sm => sm.DestinationWarehouseId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_StockMovement_DestinationWarehouse");
+
+                entity.HasOne(sm => sm.DestinationLocation)
+                    .WithMany()
+                    .HasForeignKey(sm => sm.DestinationLocationId)
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .HasConstraintName("FK_StockMovement_DestinationLocation");
+
+                // Index
+                entity.HasIndex(e => e.MovementNumber)
+                    .IsUnique()
+                    .HasDatabaseName("IX_StockMovement_Number_Unique");
+
+                entity.HasIndex(e => e.ProductVariantSKU)
+                    .HasDatabaseName("IX_StockMovement_ProductVariantSKU");
+
+                entity.HasIndex(e => new { e.MovementType, e.Direction })
+                    .HasDatabaseName("IX_StockMovement_Type_Direction");
+
+                entity.HasIndex(e => e.EffectiveDate)
+                    .HasDatabaseName("IX_StockMovement_EffectiveDate");
+
+                entity.HasIndex(e => new { e.Status, e.IsConfirmed })
+                    .HasDatabaseName("IX_StockMovement_Status_Confirmed");
+
+                entity.HasIndex(e => e.ExternalReference)
+                    .HasDatabaseName("IX_StockMovement_ExternalReference");
+
+                entity.HasIndex(e => e.LotNumber)
+                    .HasDatabaseName("IX_StockMovement_LotNumber");
+
+                entity.HasIndex(e => new { e.WarehouseId, e.EffectiveDate })
+                    .HasDatabaseName("IX_StockMovement_Warehouse_Date");
+            });
+        }
+
+        // ================================================================
+        // CONFIGURATION DES ENTITÉS DE RÉFÉRENCE (EXISTANTES)
+        // ================================================================
+
         private void ConfigureProductType(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<ProductType>(entity =>
@@ -113,9 +604,6 @@ namespace ERP.Infrastructure.Data
             });
         }
 
-        // ================================================================
-        // CONFIGURATION BRAND
-        // ================================================================
         private void ConfigureBrand(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Brand>(entity =>
@@ -166,9 +654,6 @@ namespace ERP.Infrastructure.Data
             });
         }
 
-        // ================================================================
-        // CONFIGURATION MODEL
-        // ================================================================
         private void ConfigureModel(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Model>(entity =>
@@ -226,9 +711,6 @@ namespace ERP.Infrastructure.Data
             });
         }
 
-        // ================================================================
-        // CONFIGURATION COLOR
-        // ================================================================
         private void ConfigureColor(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Color>(entity =>
@@ -263,9 +745,6 @@ namespace ERP.Infrastructure.Data
             });
         }
 
-        // ================================================================
-        // CONFIGURATION CONDITION
-        // ================================================================
         private void ConfigureCondition(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Condition>(entity =>
@@ -305,7 +784,7 @@ namespace ERP.Infrastructure.Data
         }
 
         // ================================================================
-        // CONFIGURATION PRODUCT
+        // CONFIGURATION PRODUCT (LEGACY - À MIGRER)
         // ================================================================
         private void ConfigureProduct(ModelBuilder modelBuilder)
         {
@@ -382,26 +861,9 @@ namespace ERP.Infrastructure.Data
                     .HasDefaultValue(5)
                     .HasComment("Seuil minimum de stock");
 
-                // Caractéristiques techniques
-                entity.Property(e => e.Storage)
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Memory)
-                    .HasMaxLength(50);
-
-                entity.Property(e => e.Processor)
-                    .HasMaxLength(150);
-
-                entity.Property(e => e.ScreenSize)
-                    .HasMaxLength(20);
-
-                // Fournisseur
                 entity.Property(e => e.SupplierName)
                     .IsRequired()
                     .HasMaxLength(200);
-
-                entity.Property(e => e.SupplierCity)
-                    .HasMaxLength(100);
 
                 entity.Property(e => e.ImportBatch)
                     .IsRequired()
@@ -411,26 +873,9 @@ namespace ERP.Infrastructure.Data
                     .IsRequired()
                     .HasMaxLength(100);
 
-                // Statut
                 entity.Property(e => e.Status)
                     .HasMaxLength(50)
                     .HasDefaultValue("Available");
-
-                // Informations complémentaires
-                entity.Property(e => e.Notes)
-                    .HasMaxLength(500);
-
-                entity.Property(e => e.WarrantyInfo)
-                    .HasMaxLength(300);
-
-                entity.Property(e => e.ImageUrl)
-                    .HasMaxLength(500);
-
-                entity.Property(e => e.ImagesUrls)
-                    .HasMaxLength(2000);
-
-                entity.Property(e => e.DocumentsUrls)
-                    .HasMaxLength(2000);
 
                 // Relations (clés étrangères)
                 entity.HasOne(p => p.ProductType)
@@ -501,3 +946,85 @@ namespace ERP.Infrastructure.Data
         }
     }
 }
+                    .IsRequired()
+                    .HasComment("Emplacement spécifique");
+
+entity.Property(e => e.QuantityOnHand)
+    .IsRequired()
+    .HasDefaultValue(0)
+    .HasComment("Quantité physiquement présente");
+
+entity.Property(e => e.AverageCost)
+    .HasColumnType("decimal(18,2)")
+    .HasDefaultValue(0)
+    .HasComment("Coût unitaire moyen pondéré");
+
+entity.Property(e => e.LastCost)
+    .HasColumnType("decimal(18,2)")
+    .HasDefaultValue(0)
+    .HasComment("Coût du dernier achat");
+
+entity.Property(e => e.ReorderLevel)
+    .HasDefaultValue(5);
+
+entity.Property(e => e.Status)
+    .HasMaxLength(50)
+    .HasDefaultValue("Available");
+
+entity.Property(e => e.IsActive)
+    .HasDefaultValue(true);
+
+// Relations
+entity.HasOne(s => s.Warehouse)
+    .WithMany(w => w.Stocks)
+    .HasForeignKey(s => s.WarehouseId)
+    .OnDelete(DeleteBehavior.Restrict)
+    .HasConstraintName("FK_Stock_Warehouse");
+
+entity.HasOne(s => s.Location)
+    .WithMany(l => l.Stocks)
+    .HasForeignKey(s => s.LocationId)
+    .OnDelete(DeleteBehavior.Restrict)
+    .HasConstraintName("FK_Stock_Location");
+
+// Index
+entity.HasIndex(e => new { e.ProductVariantSKU, e.WarehouseId, e.LocationId })
+    .IsUnique()
+    .HasDatabaseName("IX_Stock_SKU_Warehouse_Location_Unique");
+
+entity.HasIndex(e => e.ProductVariantSKU)
+    .HasDatabaseName("IX_Stock_ProductVariantSKU");
+
+entity.HasIndex(e => new { e.QuantityOnHand, e.ReorderLevel })
+    .HasDatabaseName("IX_Stock_Quantity_Reorder");
+
+entity.HasIndex(e => new { e.Status, e.IsActive })
+    .HasDatabaseName("IX_Stock_Status_Active");
+
+entity.HasIndex(e => e.LotNumber)
+    .HasDatabaseName("IX_Stock_LotNumber");
+
+entity.HasIndex(e => e.ExpiryDate)
+    .HasDatabaseName("IX_Stock_ExpiryDate");
+            });
+        }
+
+        // ================================================================
+        // CONFIGURATION STOCKMOVEMENT
+        // ================================================================
+        private void ConfigureStockMovement(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<StockMovement>(entity =>
+    {
+    entity.HasKey(e => e.Id);
+
+    entity.Property(e => e.ProductVariantSKU)
+        .IsRequired()
+        .HasMaxLength(50)
+        .HasComment("SKU du produit variant");
+
+    entity.Property(e => e.WarehouseId)
+        .IsRequired()
+        .HasComment("Entrepôt concerné");
+
+    entity.Property(e => e.LocationId)

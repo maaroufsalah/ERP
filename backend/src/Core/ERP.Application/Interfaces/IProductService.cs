@@ -1,4 +1,4 @@
-﻿using ERP.Application.DTOs;
+﻿using ERP.Application.DTOs.Product;
 
 namespace ERP.Application.Interfaces.IServices
 {
